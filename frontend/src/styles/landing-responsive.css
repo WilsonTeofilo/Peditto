@@ -1,0 +1,172 @@
+/* ══════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════════ */
+@media (max-width: 960px) {
+  .landing-nav {
+    gap: 15px;
+  }
+  .landing-hero__grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .landing-hero h1 {
+    font-size: clamp(42px, 7vw, 58px);
+  }
+  .hero-form-column {
+    width: min(100%, 600px);
+    margin-inline: auto;
+  }
+  .hero-signup-card {
+    transform: none;
+  }
+  .area-layout {
+    grid-template-columns: minmax(0, .8fr) minmax(340px, 1.1fr);
+    gap: 42px;
+  }
+  .calc-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .calc-window {
+    max-width: 500px;
+  }
+  .pain-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .flow-list {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 740px) {
+  .landing-container {
+    width: min(600px, calc(100% - 36px));
+  }
+  .landing-header__inner {
+    min-height: 68px;
+    gap: 12px;
+  }
+  .landing-nav {
+    display: none;
+  }
+  .landing-header__actions {
+    gap: 12px;
+  }
+  .landing-login {
+    font-size: 12px;
+  }
+  .landing-hero {
+    padding-block: 44px 56px;
+  }
+  .landing-hero h1 {
+    font-size: clamp(36px, 9vw, 50px);
+  }
+  .landing-hero__lead {
+    font-size: 15px;
+  }
+  .hero-signup-card__body { padding: 20px; }
+  .hero-mascot { right: 2%; bottom: -48px; width: 74px; }
+  .flow-section,
+  .faq-section {
+    padding-block: 64px;
+  }
+  .flow-step__mascot-frame {
+    height: 120px;
+  }
+  .flow-step__mascot {
+    max-height: 105px;
+  }
+  .pain-section {
+    padding-block: 56px;
+  }
+  .pain-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .calc-section,
+  .compare-section {
+    padding-block: 56px;
+  }
+  .area-section {
+    padding-block: 64px;
+  }
+  .area-layout,
+  .faq-layout {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+  .area-map {
+    max-width: 540px;
+  }
+  .closing-section {
+    padding-bottom: 62px;
+  }
+  .closing-panel {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 28px 24px;
+  }
+  .closing-panel__action {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .landing-footer__inner {
+    flex-wrap: wrap;
+    padding-block: 18px;
+  }
+  .landing-footer__inner > span {
+    order: 3;
+    width: 100%;
+  }
+  .ticker-ribbon {
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 420px) {
+  .landing-container {
+    width: calc(100% - 28px);
+  }
+  .landing-brand {
+    gap: 6px;
+    font-size: 21px;
+  }
+  .landing-brand img {
+    width: 32px;
+    height: 32px;
+  }
+  .landing-header__actions {
+    gap: 9px;
+  }
+  .landing-login {
+    display: none;
+  }
+  .landing-button--small {
+    min-height: 36px;
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+  .landing-hero {
+    padding-top: 32px;
+  }
+  .hero-signup-card__body { padding: 17px 14px; }
+  .hero-signup-card__header h2 { font-size: 22px; }
+  .registration-pair { grid-template-columns: 1fr; }
+  .registration-form { gap: 10px; }
+  .hero-mascot { right: 0; bottom: -44px; width: 62px; }
+  .compare-table { min-width: 800px; }
+  .compare-table th,
+  .compare-table td { padding: 12px; }
+  .area-map__legend {
+    gap: 10px;
+    font-size: 10px;
+  }
+  .closing-panel {
+    padding-inline: 18px;
+  }
+  .closing-panel__mascot {
+    width: 56px;
+    height: 56px;
+  }
+}

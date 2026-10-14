@@ -10,7 +10,7 @@ function ClosingSection() {
           <p>Monte seu cardápio, configure sua área de entrega e teste o fluxo por 30 dias. Uma loja por CPF ou CNPJ.</p>
         </div>
         <div className="closing-panel__action">
-          <img className="closing-panel__mascot" src="/mascot-badge.png" alt="" aria-hidden="true" />
+          <img className="closing-panel__mascot" src="/peditto-mascot-avatar.png" alt="" aria-hidden="true" />
           <a className="landing-button landing-button--gold" href="/criar-conta">
             Começar meu teste <ArrowRight size={17} aria-hidden="true" />
           </a>
