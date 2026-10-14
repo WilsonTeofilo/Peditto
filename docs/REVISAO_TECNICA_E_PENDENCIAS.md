@@ -1,0 +1,114 @@
+# Revisão técnica e pendências do Peditto
+
+**Revisado em:** 14/10/2026  
+**Escopo:** estado real do repositório após avanço das Fases 3 e 4. Este documento acompanha [`README_ROTEIRO_MVC_E_SAAS.md`](README_ROTEIRO_MVC_E_SAAS.md); manter ambos alinhados.
+
+## Revisão de legibilidade do backend — 14/10/2026
+
+- Modelos JPA que estavam comprimidos foram reformatados para leitura por responsabilidade; campos e invariantes existentes foram preservados.
+- O SQL atômico duplicado do rate limit foi movido a `RateLimitBucketStore`, compartilhado pelo filtro de IP e pelo limitador de identidade. A política e os fingerprints continuam nos componentes responsáveis por cada fluxo.
+- A entidade JPA `ApiRateLimitBucket` não tinha consumidores (o acesso ao bucket é SQL direto) e foi removida; associações inversas sem uso em `AppUser`/`Organization` também foram retiradas. Flyway continua sendo a fonte do schema.
+- Limites geográficos em `DeliveryZone` agora têm nomes explícitos e validação separada. A captura de erro do filtro de rate limit foi estreitada para falhas esperadas de banco/criptografia.
+- `pom.xml` e trechos longos de filtros/repositories foram formatados. A varredura estática não encontrou os padrões listados no roteiro (Lombok `@Data`, injeção em campo, `BeanUtils`, stdout, TODO/FIXME abandonados).
+- A validação anterior de backend iniciou a aplicação em porta temporária, com V1–V8 e Hibernate `validate`; essa checagem precede o frontend e V9/V10.
+- Criado `frontend/` com React + TypeScript + Vite, telas responsivas de entrada/cadastro, MFA por e-mail/SMS, integração CSRF same-origin e Vite proxy para `/api`. O estilo usa papel creme, ameixa e terracota, janela retrô tátil e fontes locais do sistema, sem gradientes ou neon.
+- Página pública inicial inclui pitch baseado na dor levantada pelo TCC, avatar/logo e favicon derivados da mascote oficial; a leitura visual e o texto foram registrados em `docs/brand/PITCH_E_IDENTIDADE_VISUAL.md`. O roteiro ganhou a Fase 13 com SEO técnico, conteúdo, indexação e medição.
+- `npm install` criou o lockfile; npm reportou zero vulnerabilidades. `npm run build` passou e a página foi conferida no navegador local. O fluxo ainda não foi integrado a API ativa, pois o PostgreSQL continua indisponível e a entrega OTP requer configuração externa.
+
+**Limite desta revisão:** os modelos de pedido/catálogo/cliente ainda são estruturas de persistência iniciais, sem comportamento de aplicação ou endpoints. Não foram criados `Money`, strategies, interfaces de provider ou value objects especulativos; introduzi-los junto aos casos de uso reais evita abstração prematura.
+
+## Avanço das Fases 3 e 4 — 14/10/2026
+
+- A regra de uma loja por organização agora tem migration V9 com `UNIQUE(organization_id)`, preservando a chave composta usada pelas FKs. A migration aborta se encontrar organizações com lojas duplicadas.
+- A tabela antiga de encargos só é removida pela V9 se estiver vazia; o modelo JPA `LateCharge` foi retirado. A regra de produto não cobra multa, juros ou encargo por atraso.
+- Login relê o estado `enabled` do usuário sob lock antes do envio de OTP e da criação da sessão, evitando confiar no estado carregado pela pré-autenticação.
+- `mvn -q clean compile -DskipTests` passou após essas mudanças. Não foram executados testes automatizados nem aplicada a migration V9 ao PostgreSQL local nesta revisão.
+- Implementados worker/outbox com retry limitado, transporte SMTP/Twilio, validação de configuração fail-fast quando habilitado e controllers DTO-only de registro, login MFA, recuperação, sessão e CSRF. OTP não é devolvido em resposta. Os controllers são condicionais a `OTP_DELIVERY_ENABLED=true`; rotas não implementadas continuam deny-all.
+- Recuperação exige códigos válidos nos dois canais verificados, troca a senha e revoga sessões. Troca de contato e de fator MFA não foi exposta; ainda exige fluxo de step-up, notificação e auditoria.
+- Fase 4 avançou com allow-list de capabilities, verificação de existência de produto/pedido no tenant, repositories tenant-scoped e transaction manager que define `peditto.organization_id` com `set_config(..., true)` na transação JPA. A migration V10 ativa e força RLS nas 14 tabelas operacionais aprovadas e cria policy restrita à role runtime e policy de manutenção da role migrator.
+- Compilação Maven passou depois dessas mudanças. O PostgreSQL local segue indisponível na porta 15432; V9 e V10 não foram aplicadas e não houve validação Hibernate ou de alternância de tenant no pool. Não foi lido `.env` nem exibido segredo.
+
+## Início da Fase 4 — 14/10/2026
+
+- Criado `TenantContext` request-local, que só fornece organização por meio de `requireOrganizationId()` e falha fechado se não houver contexto autorizado.
+- Criado `TenantContextFilter`: `X-Organization-Id` é somente um seletor; o backend valida UUID e membership `ACTIVE` para o principal UUID da sessão opaca. Associação ausente/inválida recebe 404 genérico. O contexto é limpo em `finally` em todos os caminhos.
+- Filtro integrado depois da autenticação na cadeia Spring Security e desabilitado como filtro servlet automático, evitando execução antes da sessão. `anyRequest().denyAll()` permanece intacto.
+- Compilação Maven após a implementação passou com `-DskipTests`. Não foram executados testes; o contexto ainda não é usado por controllers e não deve ser considerado isolamento completo.
+- Ainda faltam endpoints de negócio e autorização efetivamente aplicados em cada rota, resolução de domínio público allow-listed, execução das migrations e validação A↔B na mesma conexão Hikari. Não propagar o ThreadLocal para tarefas assíncronas; tarefas futuras devem definir contexto explicitamente ou usar operações administrativas isoladas.
+- `TenantAuthorization` oferece allow-list fechada e matriz por OWNER/MANAGER/STAFF; não há wildcard para `platform:*`. Produtos/pedidos são consultados também por tenant. Nenhum endpoint de negócio está liberado.
+## Estado executivo
+
+Fases 0, 1 e 2 estão documentadas como concluídas. V1–V8 foram aplicadas anteriormente e validadas com Hibernate. V9/V10 foram criadas, mas ainda não aplicadas, pois PostgreSQL não está acessível nesta sessão. O backend compila com as alterações recentes.
+
+**A API de autenticação está implementada, mas ainda não validada como fluxo integrado.** Rotas existem sob `/api/v1/auth`, CSRF tem endpoint próprio e controllers ficam condicionados à habilitação de entrega OTP. Ainda faltam credenciais reais instaladas no secret manager, validação com PostgreSQL e providers, e os gates de browser. Endpoints de negócio seguem `denyAll` até autorização por recurso ser conectada e isolamento ser comprovado.
+
+Não foram executados testes automatizados nesta revisão. Foram usados build/compilação e inicialização local com migrations e schema validation. Não há confirmação aqui de testes de concorrência, integração de canal ou segurança fim a fim.
+
+## O que está implementado
+
+### Identidade e abuso
+
+- DTO de registro com allow-list e rejeição global de propriedades JSON desconhecidas; campos privilegiados não são copiados de payload para entidade.
+- Normalização de e-mail, telefone E.164 e nome; CPF/CNPJ canonizado e validado por dígitos verificadores.
+- Senha codificada com `DelegatingPasswordEncoder` e PBKDF2 versionado; respostas genéricas para conflitos de cadastro e início de login.
+- Cadastro transacional cria organização, usuário, documento, membership OWNER, loja vazia/configuração e desafios. Trial e ativação só acontecem depois da confirmação dos dois contatos.
+- OTP numérico de 6 dígitos gerado por CSPRNG; HMAC com segredo separado do banco, vinculado a usuário/finalidade/canal/expiração; comparação timing-safe, expiração, tentativas limitadas e consumo sob lock.
+- Outbox persiste payload cifrado em AES-GCM com nonce e versão da chave; worker agenda entrega SMTP/SMS via Twilio, com lease, retry limitado, backoff, expiração e redaction. Não executado contra credenciais/provider nesta sessão.
+- Buckets de abuso persistidos no PostgreSQL usam fingerprints HMAC: cadastro por documento/e-mail/telefone, OTP por destino/finalidade e login. Limite por IP continua usando fingerprint e endereço do socket, sem confiar em `X-Forwarded-For`.
+- Login aceita e-mail ou CPF/CNPJ + senha; resposta mantém forma/canais genéricos, criação de pré-autenticação de curta duração e MFA escolhido entre canais declarados. A sessão só é criada após OTP válido.
+
+### Sessões e segurança HTTP
+
+- Token aleatório opaco de sessão; somente SHA-256 do token fica no banco. Sessão de 12 horas validada no servidor por filtro e estado ativo do usuário.
+- Cookie de sessão `__Host-`, `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`; CSRF permanece ligado e CORS desligado. Endpoint emite token para o React; validação em browser/origin real segue pendente.
+- Logout da sessão atual e global revogam sessões e registram auditoria.
+- Rotação substitui o token mantendo família; reutilização de token revogado tenta revogar as sessões ativas remanescentes da família e gera evento de auditoria. Sem endpoint público de rotação.
+- `anyRequest().denyAll()` segue ativo. Não há permissões concedidas por claims do cliente.
+- Segredos de HMAC e AES-GCM são variáveis obrigatórias no ambiente; script de desenvolvimento valida allow-list e formato sem imprimir valores. `.env` local está ignorado e não deve ser copiado para commits ou respostas.
+
+## Pendências para fechar a Fase 3
+
+1. Configurar SMTP e Twilio no secret manager do ambiente, validar SPF/DKIM/DMARC, sender, limite/custo e entrega sem revelar OTP em logs; conferir monitoramento da outbox.
+2. Fazer validação integrada dos contratos DTO-only e CSRF em navegador/origem de frontend antes de habilitar `OTP_DELIVERY_ENABLED` em ambiente compartilhado.
+3. Definir como a resposta genérica do login entrega/oculta erro sem permitir enumeração; somente os canais verificados devem aparecer, com destino mascarado e escolha submetida por allow-list. Hoje a lista de canais é fixa e requer revisão antes do controller.
+4. Ligar corretamente cookie e CSRF: token CSRF legível em endpoint dedicado, `CookieCsrfTokenRepository`/handler adequado ao React e validação de Origin/Referer como defesa adicional. CORS exato somente se frontend ficar em origem diferente.
+5. [x] Login relê e valida o estado habilitado sob lock antes de solicitar OTP ou criar sessão.
+6. Recuperação foi implementada exigindo OTP dos dois canais e revogando sessões. Validar limites/fluxo integrado e definir mensagens seguras de notificação; recuperação não troca contato nem contorna MFA.
+7. Troca de e-mail/telefone exige autenticação recente/step-up, verificação do novo destino, notificação no destino anterior quando possível, cooldown, auditoria e política de recuperação.
+8. Listar sessões próprias com metadados mínimos e revogar sessão específica; não expor tokens/IPs/user-agent bruto. Logout global já existe como serviço interno.
+9. Fechar matriz de rate limit (IP + conta/destino), CAPTCHA adaptativo após sinais de abuso, métricas sem PII e proteção contra lockout induzido por terceiros.
+10. Cobrir por testes unitários/integração: corrida por CPF/CNPJ, trial único, OTP replay/expirado/limite, login com MFA, desativação concorrente, rotação e reuse, CSRF, unknown fields, enumeração e revogação. Testes não foram executados nesta revisão.
+11. Verificar que CNPJ só autentica o titular OWNER da organização e que não será usado como identificador para funcionários convidados. Se usuário puder pertencer a várias lojas, resolver contexto por membership depois de autenticar.
+
+## Gates antes de Fase 4 e de qualquer dado privado
+
+- Não remover o default-deny; só liberar endpoint após DTO, autenticação, CSRF, autorização e teste negativo.
+- Aplicar V9/V10 e provar isolamento A↔B na conexão reutilizada do pool; RLS é defesa em profundidade, não substitui autorização.
+- Implementar endpoints de negócio com TenantContext, ownership por objeto, queries tenant-scoped e matriz RBAC/ABAC já iniciadas.
+- Aplicar FKs compostas para impedir referências cruzadas e testes de IDOR em leitura, escrita, busca, exportação e mídia.
+- Autenticação de plataforma/CEO separada de membership de loja, MFA obrigatório, step-up e auditoria antes de criar console administrativo.
+
+## Gatilhos de produção
+
+- TLS/HSTS na borda, proxy confiável configurado explicitamente, secrets manager e rotação dos segredos locais/de produção.
+- Roles PostgreSQL mínimas separadas para aplicação e migração; backup criptografado com restore testado, alertas e resposta a incidente.
+- Provedores de pagamento hospedados e webhooks autenticados/idempotentes; nunca receber ou persistir PAN/CVV. Rever termos de cobrança sem multa/juros, suspensão, cancelamento e retenção com jurídico/contábil.
+- Provider de mapa escolhido sob termos/licenças adequados; validação server-side do raio e coleta de localização apenas por ação explícita do cliente.
+- LGPD: finalidade, minimização, retenção, exclusão/exportação, contratos de operador e processo de incidente.
+
+## Próximos passos ordenados
+
+1. Disponibilizar PostgreSQL e aplicar V9/V10; validar Hibernate, policies, permissões e conexão pool reutilizada alternando organização A/B.
+2. Configurar SMTP/Twilio em ambiente seguro e validar entrega, retries, expiração e logs redigidos. Não gravar segredos no projeto.
+3. Revisar integração React/CSRF e rodar validações automatizadas de cadastro concorrente, OTP, sessão, recuperação, sessão revogada e unknown fields antes de habilitar endpoints em ambiente compartilhado.
+4. Implementar primeiro endpoint vertical de catálogo com DTO allow-list, `@PreAuthorize`/capability, tenant repository, RLS e casos negativos cross-tenant; só então liberar sua rota.
+5. Fechar troca de contato/MFA com reautenticação, step-up, notificação no endereço anterior, cooldown e auditoria.
+6. Resolver domínio público allow-listed; depois seguir para setup da loja e demais fases.
+
+## Referências de implementação
+
+- Roteiro completo e critérios de aceite: [`README_ROTEIRO_MVC_E_SAAS.md`](README_ROTEIRO_MVC_E_SAAS.md).
+- Decisão de identidade/sessão: [`decisions/0002-identidade-e-sessao.md`](decisions/0002-identidade-e-sessao.md).
+- Provedores de OTP escolhidos: [`decisions/0007-adiamento-de-provedores.md`](decisions/0007-adiamento-de-provedores.md).
+- RLS e contexto de tenant: [`decisions/0008-rls-tenant-context.md`](decisions/0008-rls-tenant-context.md).
+- Threat model: [`security/THREAT_MODEL_MVP.md`](security/THREAT_MODEL_MVP.md).

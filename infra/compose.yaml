@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: peditto
+      POSTGRES_USER: peditto
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your shell}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in your shell}
+      POSTGRES_MIGRATION_PASSWORD: ${POSTGRES_MIGRATION_PASSWORD:?Set POSTGRES_MIGRATION_PASSWORD in your shell}
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - peditto-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U peditto -d peditto"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  peditto-postgres-data:

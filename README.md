@@ -351,5 +351,3 @@ Manter módulos funcionais completos, nomes explícitos e arquivos de tamanho ra
 - Pedidos guardam snapshots e transições; histórico financeiro não muda quando catálogo muda.
 - Segurança e isolamento são verificados em testes automatizados; UI não é barreira de segurança.
 - O design mantém caráter próprio, calor, textura e hierarquia de delivery, com contraste, acessibilidade e boa performance.
-#   P e d i t t o  
- 

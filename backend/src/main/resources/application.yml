@@ -1,0 +1,89 @@
+spring:
+  application:
+    name: peditto-api
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 3000
+      mail.smtp.writetimeout: 5000
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:15432/peditto}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 3000
+      validation-timeout: 1000
+      initialization-fail-timeout: 10000
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    user: ${DB_MIGRATION_USER}
+    password: ${DB_MIGRATION_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+      hibernate.format_sql: false
+      hibernate.jdbc.batch_size: 25
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: false
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      enabled: true
+      show-details: never
+      show-components: never
+server:
+  forward-headers-strategy: none
+  error:
+    include-message: never
+    include-stacktrace: never
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 1MB
+    max-swallow-size: 1MB
+peditto:
+  identity:
+    otp-hmac-key: ${OTP_HMAC_KEY}
+    outbox-encryption-key-base64: ${OUTBOX_ENCRYPTION_KEY_BASE64}
+    outbox-key-version: ${OUTBOX_ENCRYPTION_KEY_VERSION}
+    delivery-enabled: ${OTP_DELIVERY_ENABLED:false}
+    outbox-poll-ms: ${OTP_OUTBOX_POLL_MS:1000}
+    mail-from: ${OTP_MAIL_FROM:}
+    twilio-account-sid: ${TWILIO_ACCOUNT_SID:}
+    twilio-api-key-sid: ${TWILIO_API_KEY_SID:}
+    twilio-api-key-secret: ${TWILIO_API_KEY_SECRET:}
+    twilio-messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
+  security:
+    rate-limit:
+      hmac-key: ${RATE_LIMIT_HMAC_KEY}
+      auth-max-requests: 10
+      auth-window-seconds: 60
+      auth-block-minutes: 15
+      cleanup-delay-ms: 3600000
+logging:
+  structured:
+    format:
+      console: ecs

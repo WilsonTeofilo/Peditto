@@ -1,0 +1,104 @@
+/* Scroll reveals and tactile depth for the public landing page. */
+html.motion-enabled [data-reveal] {
+  opacity: 0;
+  transition:
+    opacity .65s ease,
+    transform .65s cubic-bezier(.16, 1, .3, 1);
+  will-change: opacity, transform;
+}
+
+html.motion-enabled [data-reveal="up"],
+html.motion-enabled [data-reveal=""]:not([data-reveal="left"]):not([data-reveal="right"]):not([data-reveal="pop"]):not([data-reveal="stagger"]) {
+  transform: translateY(28px);
+}
+
+html.motion-enabled [data-reveal="left"] {
+  transform: translateX(-34px);
+}
+
+html.motion-enabled [data-reveal="right"] {
+  transform: translateX(34px);
+}
+
+html.motion-enabled [data-reveal="pop"] {
+  transform: translateY(18px) scale(.95);
+}
+
+[data-reveal].is-visible {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) scale(1) !important;
+}
+
+[data-reveal="stagger"] > *:nth-child(1) { transition-delay: .05s; }
+[data-reveal="stagger"] > *:nth-child(2) { transition-delay: .14s; }
+[data-reveal="stagger"] > *:nth-child(3) { transition-delay: .23s; }
+[data-reveal="stagger"] > *:nth-child(4) { transition-delay: .32s; }
+[data-reveal="stagger"] > *:nth-child(5) { transition-delay: .41s; }
+
+.hero-scene {
+  transform-style: preserve-3d;
+}
+
+.hero-preview-float {
+  transform-style: preserve-3d;
+}
+
+.hero-scene__caption {
+  transition: color .25s ease, transform .35s ease;
+}
+
+.hero-scene:hover .hero-scene__caption {
+  color: var(--plum);
+  transform: translateX(4px);
+}
+
+.flow-step {
+  transform-style: preserve-3d;
+  transition: transform .35s var(--ease-spring), box-shadow .35s var(--ease-spring);
+}
+
+.area-map {
+  transform-style: preserve-3d;
+}
+
+.area-map__radius {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: delivery-radius 3.8s ease-in-out infinite;
+}
+
+.ticker-ribbon:hover .ticker-ribbon__track {
+  animation-play-state: paused;
+}
+
+@keyframes delivery-radius {
+  0%, 100% { opacity: .72; transform: scale(.98); }
+  50% { opacity: 1; transform: scale(1.035); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .flow-step:hover {
+    transform: translateY(-6px) rotateX(2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.motion-enabled [data-reveal],
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    will-change: auto;
+  }
+
+  .ticker-ribbon__track,
+  .hero-mascot,
+  .area-map__radius {
+    animation: none !important;
+  }
+
+  .flow-step,
+  .flow-step__mascot {
+    transition: none !important;
+  }
+}
