@@ -1,70 +1,36 @@
-import { ArrowDown, ClipboardList, MapPin } from "lucide-react";
-
-function OrderPreview() {
-  return (
-    <div className="hero-preview-float" data-reveal="pop">
-      <div className="order-preview" aria-label="Prévia ilustrativa do painel de pedidos">
-        <div className="order-preview__bar">
-          <span className="window-dots" aria-hidden="true"><i /><i /><i /></span>
-          <span>PEDITTO / BALCAO.EXE</span>
-          <span className="order-preview__sample">PRÉVIA</span>
-        </div>
-        <div className="order-preview__heading">
-          <div>
-            <span className="micro-label">Fluxo de pedidos</span>
-            <h2>Pedidos da loja</h2>
-          </div>
-          <span className="order-preview__date">EXEMPLO</span>
-        </div>
-        <article className="order-ticket">
-          <div className="order-ticket__icon"><ClipboardList size={17} aria-hidden="true" /></div>
-          <div className="order-ticket__copy">
-            <strong>Pedido recebido</strong>
-            <span>2 itens · observação: sem cebola</span>
-          </div>
-          <span className="order-ticket__status">NOVO</span>
-        </article>
-        <article className="order-ticket order-ticket--warm">
-          <div className="order-ticket__icon"><MapPin size={17} aria-hidden="true" /></div>
-          <div className="order-ticket__copy">
-            <strong>Área de entrega</strong>
-            <span>Endereço de exemplo · dentro do raio</span>
-          </div>
-          <span className="order-ticket__status order-ticket__status--muted">OK</span>
-        </article>
-        <div className="order-preview__footer">
-          <span>Etapa do pedido</span><span>Em preparo</span>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { Check } from "lucide-react";
+import RegistrationFlow from "../RegistrationFlow";
 
 function HeroSection() {
   return (
-    <section className="landing-hero-wrap" aria-labelledby="hero-title">
-      <div className="landing-container landing-hero">
+    <section className="landing-hero" aria-labelledby="hero-title">
+      <div className="landing-container landing-hero__grid">
         <div className="landing-hero__copy" data-reveal="left">
-          <p className="eyebrow"><span /> Delivery independente</p>
-          <h1 id="hero-title">Do cardápio à entrega,<br /><em>no ritmo da sua loja.</em></h1>
+          <p className="eyebrow"><span /> Mais controle para quem vive da própria loja</p>
+          <h1 id="hero-title">Seu delivery pode <em>render mais.</em></h1>
           <p className="landing-hero__lead">
-            Um link para mostrar seu cardápio, organizar pedidos e acompanhar a entrega.
-            Você monta a loja e define até onde atende.
+            Divulgue seu cardápio com um link próprio, receba cada pedido organizado e escolha até onde entrega. Você cuida da comida; o Peditto põe o resto em ordem.
           </p>
-          <div className="landing-hero__actions">
-            <a className="landing-button" href="#fluxo">
-              Veja o fluxo de pedidos <ArrowDown size={16} aria-hidden="true" />
-            </a>
-            <a className="text-link" href="#entrega">Conheça a área de entrega</a>
-          </div>
-          <p className="trial-note">30 dias para testar <span>·</span> uma loja por CPF ou CNPJ</p>
+          <ul className="hero-benefits" data-reveal="stagger">
+            <li><Check size={16} aria-hidden="true" /> Sem comissão por pedido</li>
+            <li><Check size={16} aria-hidden="true" /> Seu link, sua loja</li>
+            <li><Check size={16} aria-hidden="true" /> Entrega na área que você define</li>
+          </ul>
+          <a className="hero-link" href="#fluxo">Veja como funciona <span aria-hidden="true">↓</span></a>
+          <img className="hero-mascot" src="/mascot-chef.png" alt="" aria-hidden="true" />
         </div>
-        <div className="hero-scene" data-reveal="right">
-          <div className="hero-mascot" aria-hidden="true">
-            <img src="/mascot-badge.png" alt="" />
+
+        <div className="hero-form-column" data-reveal="pop3d">
+          <div className="hero-signup-card">
+            <div className="hero-signup-card__bar">
+              <span className="window-dots" aria-hidden="true"><i /><i /><i /></span>
+              <span className="hero-signup-card__title">SUA_LOJA.EXE</span>
+              <span className="hero-signup-card__badge">30 DIAS GRÁTIS</span>
+            </div>
+            <div className="hero-signup-card__body">
+              <RegistrationFlow appearance="hero" />
+            </div>
           </div>
-          <OrderPreview />
-          <span className="hero-scene__caption">UMA PRÉVIA DO FLUXO NO BALCÃO</span>
         </div>
       </div>
     </section>
