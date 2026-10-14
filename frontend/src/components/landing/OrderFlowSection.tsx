@@ -4,8 +4,8 @@ const steps = [
     badge: "CARDÁPIO",
     title: "Compartilhe seu link",
     text: "O cliente acessa pelo navegador do celular, sem precisar baixar aplicativo pesado. Cardápio limpo, rápido e com a sua identidade.",
-    mascot: "/mascot-chef.png",
-    alt: "Mascote chef apresentando o cardápio digital",
+    mascot: "/link.png",
+    alt: "Mascote apresentando o link do cardápio digital",
   },
   {
     number: "02",

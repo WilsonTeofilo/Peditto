@@ -1,9 +1,18 @@
 /* ══════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ══════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .landing-nav { gap: 16px; }
+  .area-layout { gap: clamp(32px, 5vw, 56px); }
+}
+
 @media (max-width: 960px) {
   .landing-nav {
-    gap: 15px;
+    gap: 12px;
+  }
+  .landing-nav a,
+  .landing-login {
+    font-size: 12px;
   }
   .landing-hero__grid {
     grid-template-columns: 1fr;
@@ -21,7 +30,7 @@
   }
   .area-layout {
     grid-template-columns: minmax(0, .8fr) minmax(340px, 1.1fr);
-    gap: 42px;
+    gap: 32px;
   }
   .calc-layout {
     grid-template-columns: 1fr;
@@ -34,9 +43,22 @@
     grid-template-columns: repeat(2, 1fr);
   }
   .flow-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
   }
+  .flow-step:last-child {
+    grid-column: 1 / -1;
+    width: min(100%, 460px);
+    justify-self: center;
+  }
+}
+
+@media (max-width: 820px) {
+  .landing-header__inner { gap: 12px; }
+  .landing-nav { gap: 9px; }
+  .landing-nav a,
+  .landing-login { font-size: 11px; }
+  .landing-header__actions { gap: 10px; }
 }
 
 @media (max-width: 740px) {
@@ -66,7 +88,11 @@
     font-size: 15px;
   }
   .hero-signup-card__body { padding: 20px; }
-  .hero-mascot { right: 2%; bottom: -48px; width: 74px; }
+  .landing-hero__copy { padding-bottom: 34px; }
+  .hero-mascot { right: 1%; bottom: -28px; width: 92px; max-height: 116px; }
+  .flow-list { grid-template-columns: 1fr; gap: 20px; }
+  .flow-step:last-child { grid-column: auto; width: auto; }
+  .compare-table { min-width: 800px; }
   .flow-section,
   .faq-section {
     padding-block: 64px;
@@ -154,8 +180,7 @@
   .hero-signup-card__header h2 { font-size: 22px; }
   .registration-pair { grid-template-columns: 1fr; }
   .registration-form { gap: 10px; }
-  .hero-mascot { right: 0; bottom: -44px; width: 62px; }
-  .compare-table { min-width: 800px; }
+  .hero-mascot { right: 0; bottom: -24px; width: 78px; max-height: 98px; }
   .compare-table th,
   .compare-table td { padding: 12px; }
   .area-map__legend {
