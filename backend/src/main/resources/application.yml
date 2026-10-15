@@ -55,6 +55,9 @@ management:
       enabled: true
       show-details: never
       show-components: never
+  health:
+    mail:
+      enabled: false
 server:
   forward-headers-strategy: none
   error:
@@ -65,6 +68,10 @@ server:
     max-http-form-post-size: 1MB
     max-swallow-size: 1MB
 peditto:
+  assets:
+    enabled: ${PEDITTO_ASSET_UPLOAD_ENABLED:false}
+    private-directory: ${PEDITTO_PRIVATE_STORAGE_PATH:./var/peditto-private-assets}
+    signing-key-base64: ${PEDITTO_ASSET_SIGNING_KEY_BASE64:}
   identity:
     otp-hmac-key: ${OTP_HMAC_KEY}
     outbox-encryption-key-base64: ${OUTBOX_ENCRYPTION_KEY_BASE64}

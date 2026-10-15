@@ -2,6 +2,7 @@ package com.peditto.identity.application;
 
 import com.peditto.identity.domain.AppUser;
 import com.peditto.common.persistence.AuditWriter;
+import com.peditto.common.tenant.TenantTransactionContext;
 import com.peditto.identity.domain.AuthChallenge;
 import com.peditto.identity.domain.AuthChallengePurpose;
 import com.peditto.identity.domain.IdentityInputNormalizer;
@@ -30,12 +31,14 @@ public class ContactVerificationService {
     private final OtpDeliveryService otpDelivery;
     private final IdentityAbuseLimiter limiter;
     private final AuditWriter audit;
+    private final TenantTransactionContext tenantContext;
 
     public ContactVerificationService(AppUserRepository users, AuthChallengeRepository challenges,
             MembershipRepository memberships, TrialRepository trials, OtpDeliveryService otpDelivery,
-            IdentityAbuseLimiter limiter, AuditWriter audit) {
+            IdentityAbuseLimiter limiter, AuditWriter audit, TenantTransactionContext tenantContext) {
         this.users = users; this.challenges = challenges; this.memberships = memberships;
         this.trials = trials; this.otpDelivery = otpDelivery; this.limiter = limiter; this.audit = audit;
+        this.tenantContext = tenantContext;
     }
 
     @Transactional
@@ -67,6 +70,7 @@ public class ContactVerificationService {
                 .orElse(null);
         if (owner == null) return;
         Organization organization = owner.getOrganization();
+        tenantContext.activate(organization.getId());
         if (organization.getStatus() == com.peditto.organizations.domain.OrganizationStatus.PENDING_VERIFICATION) {
             organization.activate();
             owner.activate();

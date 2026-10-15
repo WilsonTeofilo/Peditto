@@ -316,8 +316,8 @@
   position: absolute;
   right: 8%;
   bottom: -66px;
-  width: 100px;
-  max-height: 126px;
+  width: 125px;
+  max-height: 158px;
   object-fit: contain;
   filter: drop-shadow(3px 3px 0 var(--ink));
   animation: float-bob 3.2s ease-in-out infinite;
@@ -754,17 +754,23 @@
 }
 
 .calc-result__value {
-  font: 700 32px var(--font-display);
+  display: block;
+  margin: 0;
+  font: 700 clamp(26px, 3vw, 32px)/1.15 var(--font-display);
   color: var(--red);
   letter-spacing: -.02em;
 }
 
 .calc-result__yearly {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 8px;
-  margin: 10px auto 4px;
-  padding: 5px 12px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 12px auto 4px;
+  padding: 7px 12px;
   border: 1.5px solid var(--ink);
   border-radius: 3px;
   background: var(--paper-light);

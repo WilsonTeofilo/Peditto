@@ -1,0 +1,29 @@
+.storefront [data-reveal] { opacity: 0; transform: translateY(19px); transition: opacity .62s var(--ease-out-expo), transform .62s var(--ease-out-expo); transition-delay: calc(min(var(--card-order, 0), 4) * 55ms); }
+.storefront [data-reveal].is-visible { opacity: 1; transform: translateY(0); }
+.store-hero__art:not(.is-in-view) .store-hero__photo-frame,
+.delivery-map:not(.is-in-view) .delivery-map__zone { animation-play-state: paused; }
+
+@keyframes store-plate-enter {
+  from { opacity: 0; transform: translateY(28px) rotate(-10deg) scale(.92); }
+  to { opacity: 1; transform: translateY(0) rotate(-4deg) scale(1); }
+}
+
+@keyframes store-plate-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+
+@keyframes zone-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(122 51 66 / 0%); }
+  50% { box-shadow: 0 0 0 8px rgb(122 51 66 / 5%); }
+}
+
+@keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes drawer-in { from { opacity: .6; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .storefront [data-reveal] { opacity: 1; transform: none; }
+  .store-hero__photo-frame { animation: none; }
+  .delivery-map__zone { animation: none; }
+}
