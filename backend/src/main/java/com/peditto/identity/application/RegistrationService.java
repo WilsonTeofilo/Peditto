@@ -2,6 +2,7 @@ package com.peditto.identity.application;
 
 import com.peditto.identity.domain.AppUser;
 import com.peditto.common.persistence.AuditWriter;
+import com.peditto.common.tenant.TenantTransactionContext;
 import com.peditto.identity.domain.AuthChallengePurpose;
 import com.peditto.identity.domain.OtpChannel;
 import com.peditto.identity.domain.UserDocument;
@@ -33,21 +34,25 @@ public class RegistrationService {
     private final OtpDeliveryService otpDelivery;
     private final StoreSlugFactory slugFactory;
     private final AuditWriter audit;
+    private final TenantTransactionContext tenantContext;
 
     public RegistrationService(OrganizationRepository organizations, AppUserRepository users,
             UserDocumentRepository documents, MembershipRepository memberships, StoreRepository stores,
             StoreSettingsRepository settings, PasswordEncoder passwordEncoder,
-            OtpDeliveryService otpDelivery, StoreSlugFactory slugFactory, AuditWriter audit) {
+            OtpDeliveryService otpDelivery, StoreSlugFactory slugFactory, AuditWriter audit,
+            TenantTransactionContext tenantContext) {
         this.organizations = organizations; this.users = users; this.documents = documents;
         this.memberships = memberships; this.stores = stores; this.settings = settings;
         this.passwordEncoder = passwordEncoder; this.otpDelivery = otpDelivery; this.slugFactory = slugFactory;
         this.audit = audit;
+        this.tenantContext = tenantContext;
     }
 
     @Transactional
     public void register(RegistrationInput input) {
         Organization organization = organizations.saveAndFlush(new Organization(input.documentType(), input.document(),
                 input.legalName(), input.storeName()));
+        tenantContext.activate(organization.getId());
         AppUser user = users.saveAndFlush(new AppUser(input.email(), input.phoneE164(), passwordEncoder.encode(input.password())));
         documents.save(new UserDocument(user, input.documentType(), input.document()));
         memberships.save(new Membership(organization, user, MembershipRole.OWNER));

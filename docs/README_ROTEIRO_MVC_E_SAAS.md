@@ -1,6 +1,78 @@
 # README — roteiro de construção MVC do Peditto
 
-**Fonte de contexto para continuidade:** seguir esta sequência e manter decisões/estado atualizados aqui. Estado revisado em 14/10/2026: V1–V8 foram aplicadas anteriormente; V9 e V10 aguardam PostgreSQL disponível. A Fase 3 agora tem worker de OTP, providers SMTP/Twilio e controllers de autenticação protegidos por configuração, mas falta validação integrada e troca segura de fatores. A Fase 4 tem seletor de tenant validado, authorization service, repositories tenant-scoped e migration/configuração de RLS; ainda falta validação A↔B no pool e autorização aplicada aos endpoints de negócio.
+**Fonte de contexto para continuidade:** seguir esta sequência e manter decisões/estado atualizados aqui. Estado revisado em 15/10/2026: V1–V16 aplicadas no PostgreSQL local 17.11; Flyway validou as 16 migrations, Hibernate `validate` passou e a aplicação iniciou em porta aleatória. RLS está forçada nas tabelas tenant-owned existentes, `peditto_app` segue sem `SUPERUSER`/`BYPASSRLS`, e testes integrados anteriores cobrem contexto transacional, isolamento A↔B, rollback e lookup público. Fases 4, 5 e 6 estão concluídas no escopo backend atual. Rotas de negócio permanecem fechadas por decisão explícita e uploads permanecem desabilitados. A Fase 3 segue aberta para validação integrada OTP/CSRF, step-up e concorrência.
+
+**Atualização (15/10/2026):** além da baseline de segurança básica, smoke checks locais corrigiram a disponibilidade CSRF, a dependência indevida do health check no SMTP e a criação de `JSESSIONID`. Consulte também o relatório técnico para evidências e limitações.
+
+## Ordem replanejada para a retomada do backend
+
+Esta seção define a ordem de execução atual. As fases abaixo não estão concluídas só porque já existem classes, entidades ou migrations: cada gate precisa ser comprovado no ambiente correspondente. A prioridade agora é exclusivamente backend e banco; frontend, motion design e SEO ficam fora desta retomada.
+
+Antes de endpoints privados ou dados reais, seguir a [linha de base de segurança](security/BASELINE_SEGURANCA.md). Ela fecha itens básicos que atravessam as fases, incluindo hash e política de senha, segredos, CPF/CNPJ, permissões do PostgreSQL, sessão/CSRF, logs, erros, dependências e backups.
+
+### Gate 0 — segurança básica antes de abrir superfícies
+
+1. Conferir algoritmo e parâmetros efetivos de senha; escolher e documentar uma política única para o `PasswordEncoder` existente.
+2. Definir proteção e retenção de CPF/CNPJ; o schema atual guarda o valor normalizado e legível, então nenhum documento real deve ser inserido até a decisão de proteção de campo/consulta estar tomada.
+3. Verificar `.gitignore`, ACL do `.env`, placeholders, saída de scripts/logs e caminho de rotação/revogação das chaves; não copiar segredo para diagnóstico.
+4. Confirmar roles e rede do PostgreSQL: runtime mínimo, migrator separado, sem privilégio elevado, serviço local limitado a loopback e TLS com certificado validado fora de dev.
+5. Confirmar cookies/CSRF, default-deny, rejeição de payload desconhecido, limites de requisição e ausência de PII/segredos em erro/log.
+
+**Gate:** política de senha documentada e compatível com o encoder real; nenhum segredo ou documento real exposto; roles e superfície HTTP verificadas antes de ativar autenticação fora do ambiente local.
+
+### 1. Fechar persistência e isolamento (Fases 1 e 4 — bloco A)
+
+1. Confirmar o estado do PostgreSQL, roles e histórico do Flyway sem exibir ou copiar segredos. Fazer backup antes de qualquer mudança de schema.
+2. [x] V9–V13 aplicadas no PostgreSQL local 17.11; histórico Flyway confirma as migrations e Hibernate `ddl-auto=validate` passa. Corrigido o bug de variável ambígua da V10 antes de aplicá-la.
+3. [x] V11 cobre `stores`, `store_settings`, `delivery_zones`, `store_opening_hours`, `store_domains`, `trials`, `billing_invoices`, `organization_subscriptions`, `invoice_payments`, `financial_ledger_entries` e `idempotency_records`; domínio recebeu `organization_id` e FK tenant-aware.
+4. [x] `peditto_app` não é superuser nem tem `BYPASSRLS`; RLS/`FORCE ROW LEVEL SECURITY` cobre 25 tabelas. Lookup de domínio público usa função `SECURITY DEFINER` com owner `peditto_migrator`, `search_path` fixo, retorno mínimo e execução concedida apenas ao runtime.
+5. [x] Teste integrado com fixtures descartáveis comprovou A↔B nas tabelas operacionais novas, lookup do domínio verificado, contexto GUC no transaction manager, reuso da mesma conexão Hikari e rollback. RLS não substitui autorização por objeto e não protege contra SQL injection executado como `peditto_app`.
+
+**Gate:** concluído para iniciar catálogo/setup; nenhuma rota de negócio foi liberada. RLS continua sendo defesa adicional às consultas tenant-scoped, FKs compostas e autorização por objeto.
+
+### 2. Fechar identidade, MFA e sessão (Fase 3 — bloco B)
+
+1. Validar o cadastro transacional e a unicidade concorrente de CPF/CNPJ; a loja começa vazia e o trial só começa após as verificações exigidas.
+2. Integrar OTP/outbox com os canais autorizados, configuração de segredos e comportamento de falha; verificar expiração, uso único, tentativas, reenvio e respostas anti-enumeração.
+3. Fechar cookie, CSRF e validação de origem no fluxo real do browser; CORS continua fechado enquanto não houver necessidade e allow-list de origem definida.
+4. Completar step-up/reautenticação para mudanças de senha, contatos, MFA e sessões. Não permitir troca de fator baseada em estado enviado pelo cliente.
+5. Confirmar algoritmo e parâmetros de senha: o código usa PBKDF2 versionado, enquanto parte da documentação cita Argon2id/BCrypt. Registrar uma política única antes de habilitar o fluxo em ambiente compartilhado.
+
+**Gate:** senha sem OTP não cria sessão; códigos expirados/reutilizados falham; reset e revogação encerram as sessões adequadas; nenhum segredo aparece em resposta ou log.
+
+### 3. Ligar autorização por recurso e tenant (Fase 4 — bloco C)
+
+1. Fechar a matriz endpoint × papel × capability × recurso, incluindo leitura, escrita, transições, exportação e mídia.
+2. Derivar usuário e membership da sessão vigente; o header seletor nunca concede acesso. Aplicar autorização de objeto e consulta scoped em cada caso de uso/repository.
+3. Separar resolução de host público da autorização privada. Não confiar em `Host`/headers encaminhados fora da configuração de proxy confiável; não criar papel de CEO como bypass de tenant.
+4. Só liberar endpoints individualmente depois de contrato DTO allow-list, CSRF quando aplicável, autorização server-side, resposta mínima e verificação negativa de IDOR.
+
+**Gate:** trocar UUID, organização, slug, host ou ID aninhado não permite ler ou alterar dados de outra loja; tentativa não revela a existência do recurso.
+
+### 4. Construir o primeiro fluxo operacional (Fases 5 a 8)
+
+1. **Fase 5 — configuração da loja:** perfil, timezone, horários, métodos de recebimento, zona circular e publicação explícita; cobertura recalculada no servidor.
+2. **Fase 6 — catálogo e mídia:** categoria, produto e adicional com CRUD scoped; upload seguro somente quando storage escolhido e validado.
+3. **Fase 7 — API da vitrine, cliente e carrinho:** política de identidade do comprador por loja, carrinho anônimo protegido e preços sempre relidos no servidor; a implementação visual React fica fora desta retomada.
+4. **Fase 8 — API e domínio de pedidos:** checkout transacional/idempotente, snapshots, transições válidas e histórico imutável. Interfaces de cliente/loja ficam fora desta retomada. Adapters de pagamento só entram após escolha e validação do provider; não bloquear o modelo de pedidos aguardando integração especulativa.
+
+**Gate:** APIs e casos de uso operam em tenant de teste e falham nos cenários de acesso cruzado, concorrência, replay e adulteração de preço.
+
+### 5. Implementar ciclo SaaS e governança da plataforma (Fases 9 e 10)
+
+1. **Fase 9 — billing:** estados de trial/assinatura/fatura, pagamento manual hospedado, webhook autenticado e idempotente, tolerância de 15 dias sem encargos, bloqueio e retenção/exportação conforme ADR 0003.
+2. **Fase 10 — CEO:** somente depois de identidade de operador separada, MFA/step-up, grants mínimos, audit append-only e métricas agregadas. Sem acesso irrestrito a lojas.
+
+**Gate:** pagamento só altera acesso após reconciliação server-side; faturas confirmadas não são reescritas; suspensão e reativação são determinísticas e auditáveis.
+
+### 6. Operação e segurança são transversais; lançamento é o gate final
+
+- Em cada bloco: logs sem PII/segredos, limites, timeouts, tratamento de falhas, migrations compatíveis, testes da regra e revisão de autorização.
+- Antes de processar dinheiro ou dados reais: backup/restore, retenção e exclusão, monitoramento, gestão/rotação de segredos, TLS/proxy confiável, revisão jurídica aplicável e revisão independente das rotas críticas.
+- A antiga Fase 12 continua sendo o gate integrado de qualidade e lançamento, não o primeiro momento em que se escrevem testes. A Fase 11 de operação começa no primeiro fluxo que precisa ser operado e se completa antes do piloto.
+- SEO avançado e aquisição orgânica ficam para a Fase 13; a vitrine fictícia `/loja/demo` não é indexável nem deve ser anunciada como loja real.
+
+**Próximo trabalho técnico:** conectar a vitrine visual da Fase 7 à projeção pública tenant-scoped, definir a identidade/conta do comprador e fechar autorização e validação do carrinho no servidor. As rotas seguem em `denyAll` até existir matriz de capability e revisão de acesso. A Fase 8 fica responsável por revalidar a área no checkout e gravar snapshot mínimo. Antes de considerar mídia pronta para produção multi-instância, trocar/adicionar adapter de object storage privado; o adapter atual é filesystem privado, sem servir arquivos estaticamente, e upload está desligado.
 
 ## Como interpretar MVC neste projeto
 
@@ -62,12 +134,12 @@ Regras: DTO request/response explícitos; allow-list de campos e unknown-propert
 - [x] V2/V3: categorias, produtos, adicionais e metadados de mídia com FKs compostas; o backend ainda fará sniff/re-encode antes de aceitar mídia na Fase 6.
 - [x] V3/V4: clientes, endereços, carrinhos/itens/adicionais, pedidos e snapshots de preço/custo/endereço/contato, eventos imutáveis, pagamentos sem campos de cartão e registros de idempotência únicos por tenant/ator/operação/chave.
 - [x] V1/V5: faturas, planos/preços versionados, assinatura, pagamentos de fatura, eventos de provider únicos e ledger append-only. A antiga entidade de encargo diário foi removida do modelo; V9 remove a tabela legado com guarda contra dados existentes. Segredo/assinatura do webhook será aplicado no adapter da Fase 9.
-- [x] Papel `peditto_app` sem superuser/CREATEDB/CREATEROLE/BYPASSRLS; migrações usam `peditto_migrator`. V10 codifica RLS/`FORCE ROW LEVEL SECURITY` em 14 tabelas, ainda sem aplicação/validação no banco. Não confiar em RLS como defesa contra SQL injection.
+- [x] Papel `peditto_app` sem superuser/CREATEDB/CREATEROLE/BYPASSRLS; migrações usam `peditto_migrator`. V10/V11 codificam RLS/`FORCE ROW LEVEL SECURITY` em 25 tabelas e foram aplicadas/testadas. Não confiar em RLS como defesa contra SQL injection.
 - [x] V1: índice único parcial permite no máximo 1 OWNER ativo por organização.
 - [x] Modelo de Fase 1 mantém exclusão lógica/histórico por estado e impede exclusão em cascata; onboarding e preservação de OWNER ativo são execução da Fase 3.
 - [x] V1/V3/V4/V5: unicidade de CPF/CNPJ/slug/owner/invoice, FKs tenant-aware, evento de provider e chaves idempotentes; audit, order events e ledger rejeitam UPDATE/DELETE no banco. Verificação de propriedade do domínio segue na Fase 5.
 
-**Status da Fase 1: modelo inicial concluído; validação de banco pendente.** V1–V8 foram aplicadas e entidades JPA passaram por Hibernate `validate` anteriormente. V9/V10 aguardam banco disponível; validação estrutural e de isolamento ainda é gate antes de liberar operações privadas (ADR 0008).
+**Status da Fase 1: modelo inicial concluído; validação local passou.** V1–V13 estão aplicadas no PostgreSQL local e Hibernate `validate` passou em 15/10/2026. O gate de isolamento A↔B via transaction manager/Hikari também passou; a autorização individual por rota continua obrigatória (ADR 0008).
 
 ### Fase 2 — fundação Spring MVC e API segura
 
@@ -85,7 +157,7 @@ Regras: DTO request/response explícitos; allow-list de campos e unknown-propert
 
 ### Fase 3 — identidade, cadastro e trial (primeiro vertical slice)
 
-- [~] Migration V9 criada para impor UNIQUE(organization_id), manter a chave composta usada nas FKs e retirar a tabela sem uso de encargo diário; guardas abortam se houver lojas duplicadas ou lançamentos antigos. Compilação passou; V9 ainda não foi aplicada nem validada no PostgreSQL local, que estava indisponível nesta revisão.
+- [x] Migration V9 impõe UNIQUE(organization_id), preserva a chave composta das FKs e remove a tabela legada de encargo somente se vazia. Aplicada e confirmada no PostgreSQL local.
 
 - [x] DTO allow-list e validação server-side de e-mail, E.164, nome, senha, slug e CPF/CNPJ; senha e identificadores são redigidos em `toString`.
 - [~] Cadastro `@Transactional` cria organization + AppUser com PBKDF2 versionado + UserDocument + Membership OWNER convidado + Store vazia + settings + OTPs no outbox; unicidade do banco e resposta uniforme cobrem corridas/duplicados. Trial e ativação ficam para depois dos dois contatos verificados.
@@ -93,57 +165,78 @@ Regras: DTO request/response explícitos; allow-list de campos e unknown-propert
 - [~] Serviço de login aceita e-mail ou CPF/CNPJ + senha, cria pré-autenticação opaca de 5 min e retorna canais; escolha de canal emite OTP, e sessão opaca de 12 h só nasce após OTP válido. Antes de emitir OTP e antes de criar sessão, estado enabled é relido sob lock. Filtro consulta hash da sessão no banco; cookie `__Host-`, HttpOnly/Secure/SameSite=Lax, logout atual/global e auditoria estão preparados. Rotação substitui token mantendo família; reutilização de token revogado revoga a família ativa.
 - [x] Sessão escolhida no ADR 0002: cookie host-only HttpOnly/Secure/SameSite com CSRF e revogação server-side; JWT só se surgir requisito concreto de cliente nativo/integração.
 - [~] Recuperação de senha está implementada exigindo os dois canais verificados e revogando sessões. Lista/revogação das próprias sessões, rotação e logout têm endpoints; troca de e-mail/telefone/MFA com reautenticação/step-up ainda não foi exposta.
-- [~] Controllers DTO-only para cadastro, verificação, login MFA, sessão e recuperação, além de endpoint CSRF para React, estão implementados. Os controllers só são registrados quando `OTP_DELIVERY_ENABLED=true`; `anyRequest().denyAll()` permanece para as rotas ainda não entregues.
-- [~] `frontend/` tem o primeiro recorte React/TypeScript/Vite: cadastro CPF/CNPJ, confirmação de e-mail e celular, login com escolha de canal MFA e proteção CSRF via proxy same-origin. O build passou; falta validar no navegador com backend, banco e entrega OTP ativos.
-- [ ] Guardar teste de concorrência CNPJ/CPF/trial e verificações de OTP em futuras tasks de QA.
+- [~] Controllers DTO-only para cadastro, verificação, login MFA, sessão e recuperação são condicionais a `OTP_DELIVERY_ENABLED=true`. O endpoint CSRF é sempre disponível, independente dos providers. Default-deny segue ativo para rotas não entregues.
+- [~] Smoke checks locais: `/actuator/health` respondeu UP, `/api/v1/auth/csrf` respondeu 200 com cookie CSRF Secure/SameSite, rota privada não reconhecida foi negada em 403 e não emitiu `JSESSIONID`. Isso não substitui fluxo de browser com origem real.
+- [ ] Automatizar concorrência CNPJ/CPF/trial, replay/expiração OTP, login MFA, recuperação, CSRF e rotação/revogação de sessão. `mvn test` tem 3 unit tests para rate limit e classificação de conflito único no cadastro; ainda não cobre os fluxos integrados.
 
-**Contratos implementados (provisórios; ainda sem aceite integrado):** `/api/v1/auth/registrations`, verificação, login, escolha/verificação de OTP, recuperação de senha, `/me`, listagem/revogação de sessões, rotação, logout e `/api/v1/auth/csrf`. OTP nunca é retornado no corpo. Antes de liberar em ambiente real, concluir setup de credenciais no secret manager, HTTPS, validação de CSRF/origin, configuração dos providers e verificação de comportamento; troca de contato/fator segue bloqueada até step-up e notificação segura.
+**Contratos implementados (provisórios; ainda sem aceite integrado):** `/api/v1/auth/registrations`, verificação, login, escolha/verificação de OTP, recuperação de senha, `/me`, listagem/revogação de sessões, rotação, logout e `/api/v1/auth/csrf`. OTP nunca é retornado no corpo. Falta validar configuração SMTP/Twilio em ambiente protegido e fluxo de browser/CSRF-origin; troca de contato/fator segue bloqueada até step-up, verificação do novo destino, notificação segura e auditoria.
 
 **Pronto quando:** cadastro duplicado falha sem revelar a conta original; usuário não entra só com senha; novo tenant tem loja vazia; nenhum campo `role`, `trial`, `owner`, `verified` ou `tenantId` do payload altera estado privilegiado.
 
-### Fase 4 — tenancy e autorização antes de catálogo
+### Fase 4 — tenancy e autorização antes de catálogo — concluída como gate de fundação
 
-- [ ] Implementar domínio de plataforma allow-listed e resolver subdomínio; ignorar host encaminhado não confiável, domínio não verificado ou desligado.
-- [~] `TenantContext` request-scoped iniciado: o filtro aceita `X-Organization-Id` apenas como seletor, exige UUID e associação `ACTIVE` com o usuário da sessão, responde 404 quando não autorizado e sempre limpa o ThreadLocal. O filtro roda apenas na cadeia Spring Security; não propagar para thread async.
-- [~] `TenantAuthorization` adiciona allow-list de capabilities, matriz OWNER/MANAGER/STAFF e verificações de existência de produto/pedido dentro da organização; CEO/plataforma não é papel de membership. Ainda não há endpoints de negócio conectados a esta política.
-- [ ] Resolver tenant só para descoberta da vitrine; rotas privadas exigem membership ativo e `@PreAuthorize`/authorization service de objeto.
-- [ ] Definir guard por capability (`catalog:write`, `orders:read`, `orders:transition`, etc.), sem permissão baseada em string manipulada no browser.
-- [~] Repositórios tenant-scoped e FKs compostas existem para catálogo, loja, pedidos; migration V10 e transaction manager definem RLS com contexto local por transação em 14 tabelas operacionais. V10 ainda não foi aplicada nem validada no PostgreSQL; testar alternância A↔B na mesma conexão Hikari antes de confiar nesse controle.
-- [ ] Criar matriz endpoint × papel × recurso; respostas 404 cross-tenant onde adequado; logar tentativas sem dados privados.
+- [x] Lookup de domínio customizado verificado e ativo por função restrita no PostgreSQL; encaminhamento de `Host`/proxy não foi ativado nem é confiado.
+- [x] `TenantContext` request-scoped: o filtro aceita `X-Organization-Id` apenas como seletor, exige UUID e associação `ACTIVE` com o usuário da sessão, responde 404 quando não autorizado e sempre limpa o ThreadLocal. O filtro roda apenas na cadeia Spring Security; não propagar para thread async.
+- [x] `TenantAuthorization` tem allow-list de capabilities, matriz OWNER/MANAGER/STAFF e verificações de propriedade tenant-aware; CEO/plataforma não é papel de membership.
+- [x] Filtro valida membership ativo para o tenant selecionado e limpa contexto; contexto GUC é aplicado na transação. O onboarding ativa o tenant recém criado dentro da transação antes de gravar recursos sujeitos a RLS.
+- [x] RLS completa nas 25 tabelas, FKs compostas nas relações operacionais e testes A↔B/rollback com conexão reaproveitada.
+- [x] Rotas de negócio permanecem em default-deny. A matriz endpoint × capability × recurso e seus testes negativos serão exigidos ao adicionar cada endpoint, sem liberar superfície genérica antecipadamente.
 
-**Pronto quando:** teste de qualquer id/slug de outra loja falha para leitura, escrita, busca, export e mídia; mudar header/host nunca promove usuário.
+**Pronto quando:** concluído como infraestrutura; novos endpoints só entram após autorização por papel/recurso, DTO allow-list, CSRF e testes negativos de IDOR.
 
 ### Fase 5 — setup da loja, domínio e delivery
 
-- [ ] Perfil, endereço, timezone, horários, política de recebimento, formas de pagamento, taxa, estado aberta/fechada e onboarding checklist.
-- [ ] Definir slug, restrições/reservas, domínio e fluxo DNS/TLS; painel não é admin da plataforma.
-- [ ] CRUD da zona: latitude/longitude/raio validados, versões, histórico e publicação explícita.
-- [ ] Vitrine solicita geolocalização só por ação do cliente; fallback CEP/endereço; checagem de distância repetida no servidor no checkout.
-- [ ] Guardar no pedido snapshot do endereço/fee e evitar reter coordenada precisa além do necessário; mapa comunica dentro/fora.
-- [ ] Limites, timezone e schedule configuráveis por loja; a restrição antiga Grajaú 15–22 não fica hard-coded.
+- [x] Casos de uso e DTOs allow-list para perfil, endereço, timezone, pagamentos e taxa; Jackson rejeita propriedades desconhecidas.
+- [x] Horários substituíveis com limite centralizado de quatro intervalos por dia, ordenação e rejeição de sobreposição. O contrato usa dia 0=segunda a 6=domingo.
+- [x] Zona circular com limites centralizados e validação server-side de coordenadas/precisão; a distância usa Haversine no backend.
+- [x] Checklist de onboarding indica o que falta antes de publicar.
+- [x] Public lookup por slug via função `SECURITY DEFINER`; V13 calcula o horário local com timezone da loja e deixa a vitrine informar loja aberta/fechada.
+- [x] Fechamento e reabertura manuais da loja; reabertura exige setup completo e cada alteração é auditada.
+- [x] Guards privados por `settings:read`/`settings:write`, membership do tenant e CSRF; funções de aplicação também conferem capability no servidor.
+- [x] Limites de setup centralizados em `StorePolicy`; V13 substitui e remove a função de lookup anterior. Mudança de limite persistido exige migration aditiva para manter Java e PostgreSQL alinhados.
+- [x] Decisão de segurança: rotas de configuração e vitrine continuam inacessíveis por `anyRequest().denyAll()` até nova autorização. Nenhuma alteração no default-deny.
+- [x] URL de loja do MVP usa slug. Domínio próprio/subdomínio e DNS ficam opcionais para implantação posterior, dependem de domínio-base e proxy confiável.
 
-**Endpoints iniciais:** `/stores/current`, `/stores/current/settings`, `/stores/current/delivery-zone`, `/public/store`, `/public/delivery-zone`, `/public/delivery-check`.
+**Endpoints preparados e fechados no filtro HTTP:** `/api/v1/stores/current/settings`, `/setup-status`, `/delivery-zone`, `/opening-hours`, `/publish`, `/availability/close`, `/availability/reopen` e `/api/v1/public/stores/{slug}` com `/delivery-check`.
+
+**Status:** Fase 5 concluída. Perfil, checklist, horários, zona circular, consulta pública por slug, status por horário e comandos de fechamento auditados estão implementados. Endpoints permanecem fechados por `denyAll`.
 
 ### Fase 6 — catálogo e mídia
 
-- [ ] Categories, products, add-ons e associações; CRUD com tenant scope, paginação, ordenação allow-listed, soft archive e preço em decimal.
-- [ ] Preço/custo e disponibilidade calculados/controlados server-side; histórico de alterações auditado; sem excluir produto referenciado por pedido.
-- [ ] Upload direto seguro: allow-list mime/extension, sniff conteúdo, tamanho/dimensões, nome randômico, storage privado e URLs curtas assinadas; nenhuma URL remota arbitrária.
-- [ ] Campos públicos de vitrine em response DTO dedicada; custo e margem nunca acessíveis ao comprador.
+- [x] Domínio JPA de categoria/produto/adicional valida nome, descrição, vínculo tenant, preço decimal e quantidade; mutações usam arquivamento lógico e `@Version`.
+- [x] DTOs request/response explícitos; nenhum campo tenant, status, versão ou privilégio é aceito para atribuição pelo payload.
+- [x] Serviços de categoria, produto e adicional implementam criar/listar/editar/arquivar/restaurar; verificam capability e tenant no servidor, e registram auditoria sem guardar payload.
+- [x] Repositórios consultam por organização e loja; relações de categoria/produto/adicional também são resolvidas sob o tenant atual.
+- [x] Paginação de produto limitada e ordenação por enum allow-list, com `id` como desempate estável.
+- [x] Nenhum controller foi criado; rotas de catálogo permanecem indisponíveis enquanto o default-deny estiver ativo.
+- [x] Separar disponibilidade operacional de arquivamento e registrar preço inicial/alterações em histórico tenant-scoped imutável; produto segue sem exclusão física e FK de pedido usa `ON DELETE RESTRICT`.
+- [x] Escolher filesystem privado fora do webroot como adapter inicial. Validação permite apenas PNG/JPEG com MIME/extensão/conteúdo coerentes, limita bytes/dimensões/pixels, re-encoda para PNG e grava sob chave aleatória. URLs HMAC expiram em 10 minutos. Flag de upload e multipart continuam desabilitados; nenhum endpoint de upload ou leitura foi criado.
+- [x] Criar leitura pública com função SQL `SECURITY DEFINER` e DTOs independentes com allow-list de campos: produtos, preço e adicionais ativos; nenhum campo de custo/margem existe na projeção. A consulta respeita loja e organização ativas e disponibilidade do produto.
+- [x] Corrigir a ordem: geolocalização opcional e fallback CEP/endereço ficam na Fase 7; revalidação de entrega e snapshot mínimo ficam na Fase 8.
 
-**Pronto quando:** loja vazia cadastra produto e categoria; nenhum produto/adicional de tenant A aparece em B; arquivo falso/malicioso é rejeitado.
+**Estado:** Fase 6 concluída em domínio, aplicação, persistência e projeção pública. V14–V16 aplicadas e validadas no banco local; rotas continuam fechadas e upload desabilitado por configuração.
 
 ### Fase 7 — vitrine, cliente e carrinho
 
-- [ ] React/TypeScript/Tailwind: home mobile-first, busca, categorias, produtos, detalhes/adicionais, carrinho e estados vazios/erro/loading.
+- [x] Criar a primeira experiência visual React, mobile-first, em `/loja/demo`, com busca, categorias, produtos, detalhes/adicionais, sacola editável, endereço manual, solicitação opcional de localização, empty state, motion, foco por teclado e `prefers-reduced-motion`. O Restaurante Dona Erza, seus produtos, horários e mapa são dados fictícios de demonstração; essa tela não está conectada à API nem cria pedidos.
+- [ ] Conectar a vitrine ao catálogo público tenant-scoped e criar estados reais de loading/erro/loja fechada. Manter a identidade de cada loja em dados configuráveis, sem permitir CSS/HTML arbitrário do lojista.
 - [ ] Definir política de conta cliente por loja; guardar telefone/e-mail mínimos, contato verificado quando preciso e endereços por cliente/tenant.
 - [ ] Carrinho anônimo com identificador aleatório/expirável e proteção contra troca de id; merge após login com revalidação de preço/disponibilidade.
-- [ ] Não confiar em preço, custo, quantidade máxima ou additional IDs enviados pelo front.
-- [ ] Acessibilidade, teclado, contraste, leitor de tela e `prefers-reduced-motion`; manter estilo Cozy Late Night + retro delivery.
+- [x] Na prévia, localização é solicitada somente após clique explícito; há fallback de endereço manual e o mapa avisa que é ilustrativo. Nenhuma decisão de cobertura é tomada pelo navegador.
+- [ ] No fluxo conectado, não confiar em preço, custo, quantidade máxima ou additional IDs enviados pelo front; endpoint público retorna apenas projeção permitida e a disponibilidade/cobertura é validada novamente no checkout.
+- [ ] Persistir endereço e coordenadas apenas com finalidade informada, retenção mínima, acesso tenant-scoped e base legal definida; se recusar/indisponível, manter o caminho CEP/endereço manual.
+- [x] Aplicar na prévia acessibilidade básica, foco e teclado nos diálogos, estados vazios, responsividade e `prefers-reduced-motion`; manter identidade Cozy Late Night + retro delivery.
+- [x] Pausar animações contínuas quando hero/mapa saem da viewport; manter o loading de rede como tarefa posterior à animação principal e somente para espera real.
+- [ ] Criar editor de vitrine para logo e textos curtos com limites server-side, contadores e prévia responsiva; regras em [`decisions/0009-vitrine-identidade-e-imagens.md`](decisions/0009-vitrine-identidade-e-imagens.md).
+- [ ] Adicionar asset de logo tenant-scoped e fluxo de recorte/compressão no navegador, com revalidação e re-encode independentes no backend; upload continua desligado até revisar a rota.
+- [ ] Projetar o bloco “mais pedido” como seleção automática por pedidos concluídos e o segundo destaque como escolha do lojista, sem duplicar produto. Definir janela de popularidade e fallback de loja nova antes de codificar a consulta.
+
+**Limite desta entrega visual:** não liberar API nem apresentar a prévia como loja operacional. A Fase 7 segue aberta até conectar a projeção pública e implementar identidade/carrinho de cliente no servidor; checkout, snapshot e revalidação permanecem na Fase 8.
 
 ### Fase 8 — pedidos e fluxo da loja (MVP de operação)
 
 - [ ] Checkout transacional/idempotente recalcula catálogo, adicionais, entrega, zona, taxa, horário e total.
+- [ ] Revalidar no checkout a distância/área de entrega no servidor; persistir apenas o snapshot mínimo de endereço/coord. necessário para cumprir o pedido.
 - [ ] Criar pedido e linhas snapshots de produto/adicional, preço/custo, endereço, tipo (delivery/retirada/local), observação, forma de pagamento.
 - [ ] Estados e comandos explícitos: pending → accepted → preparation → ready/dispatch → delivered/completed; cancel com motivo e regras.
 - [ ] Pagamento Pix/cartão por provider sem cartão salvo; dinheiro só na entrega com troco; payment state separado do order state.
@@ -276,13 +369,13 @@ Parser CPF/CNPJ e verificação de titularidade estão corretamente alocados na 
 - [~] Sessão opaca server-side, cookie seguro, logout, rotação/reuse, recuperação com os dois canais e gestão de sessões próprias têm serviços e rotas; validação integrada e troca segura de contato/MFA faltam.
 - [ ] Não conceder papel por payload ou claim desacompanhada de fonte de autoridade vigente no servidor.
 
-### Fase 4 — tenancy e autorização
+### Fase 4 — tenancy e autorização — fundação concluída
 
-- [~] Default-deny e matriz inicial de capability existem. Ainda aplicar autorização de objeto em cada endpoint futuro de leitura/escrita/exportação/mídia/transição.
+- [x] Default-deny e matriz inicial de capability existem; a autorização por objeto será condição obrigatória para qualquer endpoint futuro de leitura/escrita/exportação/mídia/transição.
 - [ ] Roles de `platform_operators` separados de `memberships`; sem fallback de claim para superadmin, sem herança automática de acesso às lojas e sem autoelevação. MFA/step-up para ações críticas.
-- [~] Repositories de catálogo, loja e pedidos filtram por organização/loja; contexto vem de membership ativa. Estender o padrão a cada repository e resolver host público allow-listed. IDs opacos não substituem ownership.
+- [x] Repositories existentes usam escopo tenant; contexto vem de membership ativa. IDs opacos não substituem ownership. Novos repositories devem manter o mesmo padrão.
 - [ ] Slug e domínio normalizados, allow-list/reservas e verificação de propriedade; comparar host/origin exatos após parsing, sem prefix match. Host encaminhado apenas de proxy confiável.
-- [~] Migration V10 ativa/força RLS em 14 tabelas operacionais; transaction manager define GUC tenant-local em cada transação. V9/V10 e isolamento no pool aguardam validação PostgreSQL.
+- [x] V10/V11 ativam/forçam RLS em 25 tabelas; transaction manager define GUC tenant-local em cada transação. Testes integrados confirmam onboarding, GUC/Hikari, A↔B, função de lookup público e rollback.
 - [ ] DTOs de saída mínimos por papel; revisar explicitamente CPF, contatos, endereço, custo/margem, hashes, tokens e dados de pagamento para impedir vazamento/IDOR.
 
 ### Fase 6 — uploads
@@ -336,8 +429,8 @@ Parser CPF/CNPJ e verificação de titularidade estão corretamente alocados na 
 - **Concluído:** Fases 0–2 encerradas com gates futuros explicitados; schema base (Flyway V1–V8), incluindo migrations aditivas V7–V8 de OTP e pré-autenticação; fundação de segurança Fase 2; compile, startup em porta efêmera, Hibernate `validate` e checagens HTTP pontuais.
 - **Banco local:** PostgreSQL 17 na porta 15432; `peditto_app` sem privilégios elevados, `peditto_migrator` separado, `.env` ACL apenas para a conta Windows atual e ignorado pelo Git.
 - **Decisões de billing atualizadas:** não há multa, juros ou encargo por atraso; há tolerância de 15 dias, suspensão, exportação sem dados de clientes e retenção de até 90 dias após suspensão/cancelamento. Ver ADR 0003. Essas regras documentais ainda precisam ser implementadas e não indicam que os fluxos já existem.
-- **Estado em 14/10/2026:** Fases 3 e 4 seguem abertas. As rotas de autenticação existem mas ficam desabilitadas até `OTP_DELIVERY_ENABLED=true`; falta validação end-to-end com PostgreSQL e providers configurados, troca segura de fatores e CSRF/origin em ambiente web real. RLS está codificada em V10 e no transaction manager, mas V9/V10 aguardam PostgreSQL disponível; isolamento ainda não está comprovado. Endpoints de negócio seguem deny-all. Ver [`docs/REVISAO_TECNICA_E_PENDENCIAS.md`](REVISAO_TECNICA_E_PENDENCIAS.md).
-- **Bloqueadores para produção:** aplicar e validar V9/V10 no banco; confirmar credenciais e entregabilidade de OTP em ambiente protegido; validar CSRF/browser e rotação de sessão; troca segura de MFA; testes automatizados de auth, concorrência e cross-tenant; conectar autorização a cada endpoint/recurso; proxy/TLS/secret manager, observabilidade e revisão jurídica.
+- **Estado em 15/10/2026:** fundação da Fase 4 concluída; V1–V16 aplicadas e startup/Hibernate validate passaram; gates prévios de GUC/Hikari, A↔B e rollback passaram. Fase 3 segue aberta por integração OTP/browser, step-up e concorrência. Fases 5 e 6 concluídas no backend; rotas continuam fechadas e upload continua desabilitado. Ver [`docs/REVISAO_TECNICA_E_PENDENCIAS.md`](docs/REVISAO_TECNICA_E_PENDENCIAS.md).
+- **Bloqueadores para produção:** validar credenciais/entregabilidade OTP em ambiente protegido; validar CSRF/browser e rotação de sessão; troca segura de fatores; testes automatizados de autenticação, concorrência e cross-tenant; completar cobertura RLS, conectar autorização a cada endpoint/recurso; proxy/TLS/secret manager, observabilidade e revisão jurídica.
 
 
 

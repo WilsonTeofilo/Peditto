@@ -22,6 +22,6 @@ public final class TenantContext {
         return Optional.ofNullable(ORGANIZATION_ID.get());
     }
 
-    static void setOrganizationId(UUID organizationId) { ORGANIZATION_ID.set(organizationId); }
+    public static void setOrganizationId(UUID organizationId) { ORGANIZATION_ID.set(organizationId); }
     static void clear() { ORGANIZATION_ID.remove(); }
 }

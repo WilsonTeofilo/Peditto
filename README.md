@@ -1,15 +1,15 @@
 # Peditto — Arquitetura e plano de reconstrução SaaS
 
-> Documento de análise e blueprint técnico. Não é ainda um sistema implementado.
-> O produto será reconstruído em Java + Spring Boot, React, Tailwind CSS e PostgreSQL, com API REST e isolamento real entre lojas.
+> Documento de arquitetura, plano e estado da implementação.
+> O produto está sendo construído em Java + Spring Boot, React, Tailwind CSS e PostgreSQL, com API REST e isolamento entre lojas.
 
-## Estado da implementação — 14/10/2026
+## Estado da implementação — 15/10/2026
 
-A fundação atual usa Java 21 + Spring Boot 4.1.1, JPA e Flyway V1–V10. O backend já contém controllers condicionais de autenticação, MFA e recuperação, worker configurável de OTP por SMTP/Twilio, e fundação de tenancy com policy de RLS e repositories tenant-scoped. V9/V10 ainda aguardam execução no PostgreSQL e validação de isolamento no pool; rotas de negócio continuam fechadas por padrão. O primeiro frontend React + TypeScript está em `frontend/`: há um site público de apresentação com a mascote e fluxo de cadastro/login MFA. Builds de backend e frontend passaram; a integração real depende de banco e credenciais OTP. O relatório de pendências está em [`docs/REVISAO_TECNICA_E_PENDENCIAS.md`](docs/REVISAO_TECNICA_E_PENDENCIAS.md), e o roteiro de fases em [`docs/README_ROTEIRO_MVC_E_SAAS.md`](docs/README_ROTEIRO_MVC_E_SAAS.md).
+A fundação usa Java 21 + Spring Boot 4.1.1, JPA e Flyway. V1–V16 foram aplicadas no PostgreSQL local 17.11; Flyway validou as migrations, Hibernate `ddl-auto=validate` passou e a aplicação iniciou em porta aleatória. `peditto_app` não tem `SUPERUSER`/`BYPASSRLS` e RLS está forçada em tabelas tenant-owned. Fases 4, 5 e 6 estão concluídas no backend: setup da loja, catálogo scoped, disponibilidade operacional, histórico imutável de preço, storage privado preparado e projeção pública sem campos de custo/margem. A API continua inacessível por `anyRequest().denyAll()` e uploads continuam desligados. A Fase 3 segue aberta para validação integrada de MFA, step-up, provedores externos e concorrência. Consulte [`docs/REVISAO_TECNICA_E_PENDENCIAS.md`](docs/REVISAO_TECNICA_E_PENDENCIAS.md) e [`docs/README_ROTEIRO_MVC_E_SAAS.md`](docs/README_ROTEIRO_MVC_E_SAAS.md).
 
 As regras de legibilidade, comentários enxutos, manutenibilidade e uso criterioso de estruturas/complexidade algorítmica estão em [`docs/PADROES_DE_CODIGO_E_ALGORITMOS.md`](docs/PADROES_DE_CODIGO_E_ALGORITMOS.md). São parte do padrão de implementação para backend e frontend.
 
-Na revisão de 14/10/2026, modelos JPA compactados foram reformatados, SQL duplicado de rate limit foi centralizado e os primeiros fluxos de identidade, entrega de OTP, tenancy e interface foram implementados. A página pública já apresenta o problema que o produto resolve e o cadastro; a autenticação oferece MFA por e-mail/SMS. O build do frontend passou; integração real ainda depende de PostgreSQL e canais OTP configurados. Testes automatizados não foram executados.
+Na revisão de 14/10/2026, modelos JPA compactados foram reformatados, SQL duplicado de rate limit foi centralizado e os primeiros fluxos de identidade, entrega de OTP, tenancy e interface foram implementados. A página pública já apresenta o problema que o produto resolve e o cadastro; a autenticação oferece MFA por e-mail/SMS. O build do frontend passou. O estado atualizado do backend e seus gates estão descritos no relatório técnico; testes automatizados da autenticação ainda não foram executados.
 ## 1. Objetivo e premissa
 
 O projeto de origem, **Chokko Melt**, é um sistema web de pedidos e gestão para confeitaria, criado como TCC e estudo de caso de um negócio no Grajaú, São Paulo. A nova iniciativa, em `D:\Projetos\Peditto`, transforma essa premissa em um SaaS de delivery/gestão que possa atender várias lojas independentes.
@@ -147,7 +147,7 @@ Nomes podem seguir padrão consistente em inglês ou português; escolher e mant
 - `order_item(id, tenant_id, order_id, product_id nullable, product_name_snapshot, unit_price_snapshot, unit_cost_snapshot, quantity, notes)`; `order_item_add_on` mantém nome/preço/custo/quantidade snapshots.
 - `order_event(id, tenant_id, order_id, from_status, to_status, actor_user_id, reason, created_at)` para trilha não ambígua.
 - `payment_record(id, tenant_id, order_id, method, status, amount, cash_received, change_due, provider_reference nullable)`; métodos permitidos ao comprador: Pix, cartão ou dinheiro na entrega, conforme configuração da loja. Nunca armazenar PAN, CVV, trilha magnética, senha, PIN ou segredo de cartão. Para cartão, usar checkout hospedado/tokenização de provedor compatível e token não reversível/limitado, sem salvar método para compras futuras.
-- `billing_invoice(id, organization_id, period_start, due_at, amount, status, paid_at, provider_reference)`; não há cobrança ou cálculo de multa, juros ou encargo por atraso. A migration V9 remove a tabela legada `late_charges` somente se estiver vazia e impõe a unicidade de loja por organização; o schema local ainda precisa aplicar/validar V9. Guardar apenas referência/estado do pagamento SaaS, nunca dados completos do cartão.
+- `billing_invoice(id, organization_id, period_start, due_at, amount, status, paid_at, provider_reference)`; não há cobrança ou cálculo de multa, juros ou encargo por atraso. A migration V9 remove a tabela legada `late_charges` somente se estiver vazia e impõe a unicidade de loja por organização; V9 foi aplicada no banco local. Guardar apenas referência/estado do pagamento SaaS, nunca dados completos do cartão.
 - `review` opcional, única por pedido se adotada.
 - `audit_event(id, tenant_id nullable, actor_id, action, resource_type, resource_id, request_id, metadata_redacted, created_at)` append-only para ações relevantes.
 
@@ -156,6 +156,8 @@ Nomes podem seguir padrão consistente em inglês ou português; escolher e mant
 Usar `@ManyToOne(fetch = LAZY)` do filho para pai; `@OneToMany(mappedBy=..., cascade=...)` apenas onde ciclo de vida exige. Coleções não devem ser serializadas diretamente. Evitar `CascadeType.ALL`/`REMOVE` em agregados que tenham histórico; remoções lógicas e FKs restritivas protegem pedidos. `@ManyToMany` puro não serve para produto/adicional quando a associação tiver regras/atributos; usar entidade de associação `ProductAddOn`. Definir `equals/hashCode` seguro para entidades e evitar `toString` que percorra relações. DTOs e mappers manuais explícitos (ou MapStruct com configuração estrita) controlam campos publicados.
 
 ## 6. Segurança obrigatória
+
+Os controles mínimos transversais — incluindo armazenamento de senhas, segredos, PostgreSQL, sessão, validação, logs, dependências e backups — estão organizados em [`docs/security/BASELINE_SEGURANCA.md`](docs/security/BASELINE_SEGURANCA.md). A baseline é obrigatória antes de abrir endpoints privados ou usar dados reais; os controles avançados abaixo complementam essa base.
 
 ### Mass assignment e contrato de payload
 
@@ -319,14 +321,9 @@ Manter módulos funcionais completos, nomes explícitos e arquivos de tamanho ra
 
 ## 11. Fases recomendadas
 
-1. **Descoberta e decisões:** nome Peditto e regra fechada no MVP de uma organização/documento e uma loja; definir raiz vs CNPJ completo, domínio/subdomínio, preço/conversão do trial, escopo de cobrança, horários e entrega; prototipar identidade e tokens.
-2. **Fundação:** repositório novo, CI, Compose PostgreSQL, migrations, observabilidade, DTO/erro comum, identidade, tenant resolver e modelo de autorização; nenhum catálogo global.
-3. **Cadastro e onboarding:** CPF/CNPJ único, usuário owner, loja vazia, trial de 30 dias, verificação de e-mail/celular, slug e fluxo de configuração.
-4. **Catálogo/vitrine:** categorias, produtos, adicionais, upload seguro, site público do tenant, carrinho.
-5. **Pedidos:** checkout transacional/idempotente, snapshots, status e histórico, painel operacional, comanda.
-6. **Financeiro e equipe:** permissões, relatórios definidos, convites e auditoria.
-7. **Segurança e SaaS de produção:** segundo fator por código em todos os tipos de conta, MFA reforçado para plataforma, rate limiting, monitoramento, backup/restore, domínio, cobrança manual, limites/assinatura e revisão independente.
-8. **Migração opcional:** não copiar o banco de TCC diretamente. Se os dados Chokko forem necessários, escrever importador com mapeamento, validação, relatórios de rejeição, snapshots e tenant escolhido; nunca importar admin123/credenciais de exemplo.
+A ordem executável está detalhada em [`docs/README_ROTEIRO_MVC_E_SAAS.md`](docs/README_ROTEIRO_MVC_E_SAAS.md). V9–V16 e RLS A↔B foram validadas localmente. As Fases 4, 5 e 6 estão concluídas no backend; rotas seguem fechadas e upload desligado. A Fase 7 começou com uma vitrine React de demonstração; integração de API, personalização, conta de cliente e carrinho seguro ainda estão pendentes. SEO avançado continua na Fase 13.
+
+A migração de dados do Chokko Melt continua opcional: não copiar o banco de TCC diretamente. Se os dados forem necessários, criar importador com mapeamento, validação, relatório de rejeições e tenant escolhido; nunca importar credenciais de exemplo.
 
 ## 12. Perguntas de produto a fechar antes da implementação
 

@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -59,6 +60,12 @@ public class ApiExceptionHandler {
     ProblemDetail unsupportedMediaType(HttpMediaTypeNotSupportedException exception, HttpServletRequest request) {
         return problem(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Tipo de conteúdo não suportado",
                 "Use um tipo de conteúdo aceito pelo endpoint.", request);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    ProblemDetail notFound(NoResourceFoundException exception, HttpServletRequest request) {
+        return problem(HttpStatus.NOT_FOUND, "Recurso não encontrado",
+                "O recurso solicitado não está disponível.", request);
     }
 
     @ExceptionHandler(Exception.class)

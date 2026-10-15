@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 import java.time.ZoneId;
+import java.util.UUID;
 
 @Entity
 @Table(name = "stores",
@@ -27,17 +28,17 @@ public class Store extends BaseEntity {
     @JoinColumn(name = "organization_id", nullable = false, updatable = false)
     private Organization organization;
 
-    @Column(nullable = false, unique = true, length = 63)
+    @Column(nullable = false, unique = true, length = StorePolicy.MAX_STORE_SLUG_LENGTH)
     private String slug;
 
-    @Column(name = "display_name", nullable = false, length = 120)
+    @Column(name = "display_name", nullable = false, length = StorePolicy.MAX_STORE_NAME_LENGTH)
     private String displayName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private StoreStatus status;
 
-    @Column(nullable = false, length = 64)
+    @Column(nullable = false, length = StorePolicy.MAX_TIMEZONE_LENGTH)
     private String timezone;
 
     @Version
@@ -59,5 +60,38 @@ public class Store extends BaseEntity {
     public String getDisplayName() { return displayName; }
     public StoreStatus getStatus() { return status; }
     public String getTimezone() { return timezone; }
+
+    public void updateProfile(String displayName, ZoneId timezone) {
+        if (displayName == null || displayName.isBlank()
+                || displayName.strip().length() > StorePolicy.MAX_STORE_NAME_LENGTH || timezone == null) {
+            throw new IllegalArgumentException("Perfil da loja inválido.");
+        }
+        this.displayName = displayName.strip();
+        this.timezone = timezone.getId();
+    }
+
+    public void publish() {
+        if (status != StoreStatus.SETUP_REQUIRED && status != StoreStatus.DRAFT) {
+            throw new IllegalStateException("A loja não pode ser publicada a partir do estado atual.");
+        }
+        status = StoreStatus.ACTIVE;
+    }
+
+    public void closeForOrders() {
+        if (status == StoreStatus.ACTIVE) {
+            status = StoreStatus.CLOSED;
+            return;
+        }
+        if (status != StoreStatus.CLOSED) {
+            throw new IllegalStateException("A loja não está publicada.");
+        }
+    }
+
+    public void reopenForOrders() {
+        if (status != StoreStatus.CLOSED) {
+            throw new IllegalStateException("A loja não está fechada pelo responsável.");
+        }
+        status = StoreStatus.ACTIVE;
+    }
 }
 
