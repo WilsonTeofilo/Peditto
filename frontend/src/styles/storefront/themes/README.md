@@ -6,12 +6,12 @@ As lojas usam o mesmo componente React, a mesma ordem de seções e os mesmos fl
 
 - `original.css`: identidade Original Peditto, demonstrada pela Gelatto Totosu.
 - `fast-food.css` + `fast-food/`: pele de delivery vermelho e amarelo, aplicada à Dona Erza.
-- `natural.css`: paleta demonstrativa da Muru Muru; a identidade visual verde final ainda será definida separadamente.
+- `natural.css` + `natural/`: identidade verde editorial da Muru Muru Coffee, com verde-floresta, creme natural, sálvia e marrom-café.
 
 ## Organização
 
 - `../storefront.css` e `../storefront-responsive.css` mantêm estrutura, semântica e componentes compartilhados.
-- `fast-food/` agrupa tokens, aparência, movimento, responsividade e decisões de design do tema vermelho.
+- `fast-food/` e `natural/` agrupam tokens, aparência, movimento, responsividade e decisões de design de cada pele.
 - As regras de cada pele devem ficar escopadas à classe raiz do tema.
 - Não duplicar `StorefrontPage` para criar outro tema ou loja.
 - Não criar arquivos vazios por camada; separar CSS quando isso tornar a manutenção mais clara.

@@ -18,6 +18,7 @@ export type StoreProduct = {
   price: number;
   image: string;
   imageAlt: string;
+  imagePresentation?: "portrait";
   badge?: string;
   addons: ProductAddon[];
 };

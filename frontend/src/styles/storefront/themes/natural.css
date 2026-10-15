@@ -1,13 +1,4 @@
-.storefront--natural {
-  --store-cream: #edf0e4;
-  --store-paper: #fbf9ec;
-  --store-plum: #1e4834;
-  --store-berry: #61784a;
-  --store-ink: #28382e;
-  --store-muted: #677267;
-  --store-line: #cbd2bf;
-  --store-sun: #e1e6d2;
-  --store-promo: #e4e8d8;
-  --store-map: #e4e8dc;
-  --store-status: #648553;
-}
+@import "./natural/tokens.css";
+@import "./natural/components.css";
+@import "./natural/motion.css";
+@import "./natural/responsive.css";

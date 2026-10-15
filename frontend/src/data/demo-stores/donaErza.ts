@@ -17,7 +17,7 @@ const donaErza: StorefrontDemoData = {
     foundedYear: 2025,
     deliveryTime: "30–45 min",
     openUntil: "Hoje, até 22h",
-    statusLabel: "Cozinha aberta para pedidos",
+    statusLabel: "Aberto para pedidos",
     logoUrl: erzaLogo,
     introduction: {
       eyebrow: "Restaurante e confeitaria",

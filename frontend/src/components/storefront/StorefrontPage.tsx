@@ -41,6 +41,11 @@ type PreviewAddress = {
 type ModalState = "cart" | "address" | null;
 
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const themeNavigationOptions = [
+  { theme: "original", slug: "gelatto-totosu", name: "Original Peditto", palette: "Roxo e amarelo" },
+  { theme: "fast-food", slug: "restaurante-dona-erza", name: "Fast food", palette: "Vermelho e amarelo" },
+  { theme: "natural", slug: "muru-muru-coffee", name: "Café e natural", palette: "Verde e creme" },
+] as const;
 
 function useDialogFocus(ref: RefObject<HTMLElement | null>, onClose: () => void) {
   const closeRef = useRef(onClose);
@@ -134,6 +139,30 @@ function StorefrontPage({ storeSlug }: StorefrontPageProps) {
   const [address, setAddress] = useState<PreviewAddress>({ cep: "", street: "", number: "", neighborhood: "", complement: "" });
   const [locationMessage, setLocationMessage] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+  const themeMenuButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isThemeMenuOpen) return;
+
+    function closeOnOutsideClick(event: PointerEvent) {
+      if (!themeMenuRef.current?.contains(event.target as Node)) setIsThemeMenuOpen(false);
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setIsThemeMenuOpen(false);
+      themeMenuButtonRef.current?.focus();
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isThemeMenuOpen]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -238,9 +267,51 @@ function StorefrontPage({ storeSlug }: StorefrontPageProps) {
   return (
     <main className={`storefront storefront--${store.theme}`}>
       <div className="storefront__topline">
-        <span><span className="storefront__status-dot" /> {store.statusLabel}</span>
-        <span className="storefront__demo-label">Vitrine de demonstração</span>
-        <a className="storefront__back-link" href="/#temas">← Ver opções de visual</a>
+        <span className="storefront__status"><span className="storefront__status-dot" /> {store.statusLabel}</span>
+        <span className="storefront__demo-label">Vitrine Demo</span>
+        <div className="storefront__theme-nav" ref={themeMenuRef}>
+          <button
+            ref={themeMenuButtonRef}
+            className="storefront__back-link"
+            type="button"
+            aria-label="Ver opções de visual"
+            aria-haspopup="true"
+            aria-expanded={isThemeMenuOpen}
+            aria-controls="store-theme-menu"
+            onClick={() => setIsThemeMenuOpen((open) => !open)}
+          >
+            <span className="storefront__theme-label">Ver opções de visual</span>
+            <span className="storefront__theme-label-compact" aria-hidden="true">Temas</span>
+            <ChevronDown size={14} aria-hidden="true" />
+          </button>
+          {isThemeMenuOpen && (
+            <nav className="storefront__theme-menu" id="store-theme-menu" aria-label="Navegar entre vitrines">
+              <a className="store-theme-menu__presentation" href="/#temas" onClick={() => setIsThemeMenuOpen(false)}>
+                ← Voltar à apresentação
+              </a>
+              <span className="store-theme-menu__heading">Conheça outras vitrines</span>
+              <div className="store-theme-menu__options">
+                {themeNavigationOptions.map((option) => {
+                  const isCurrent = store.theme === option.theme;
+                  const content = (
+                    <>
+                      <span className="store-theme-menu__swatch" aria-hidden="true" />
+                      <span className="store-theme-menu__copy">
+                        <strong>{option.name}</strong>
+                        <small>{option.palette}{isCurrent ? " · atual" : ""}</small>
+                      </span>
+                      {isCurrent && <Check size={16} aria-hidden="true" />}
+                    </>
+                  );
+
+                  return isCurrent
+                    ? <span className="store-theme-menu__option is-current" data-theme={option.theme} aria-current="page" key={option.theme}>{content}</span>
+                    : <a className="store-theme-menu__option" data-theme={option.theme} href={`/loja/${option.slug}`} key={option.theme}>{content}</a>;
+                })}
+              </div>
+            </nav>
+          )}
+        </div>
       </div>
 
       <header className="store-header">
@@ -271,7 +342,7 @@ function StorefrontPage({ storeSlug }: StorefrontPageProps) {
         </div>
         <div className="store-hero__art storefront__motion-target" aria-hidden="true">
           <div className="store-hero__sun" />
-          {bestSellerProduct && <figure className="store-hero__photo-frame"><img className="store-hero__food" src={bestSellerProduct.image} alt={bestSellerProduct.imageAlt} width="800" height="800" fetchPriority="high" decoding="async" /><figcaption className="store-hero__photo-label">{store.bestSellerLabel}</figcaption></figure>}
+          {bestSellerProduct && <figure className="store-hero__photo-frame"><img className={`store-hero__food${bestSellerProduct.imagePresentation ? ` store-hero__food--${bestSellerProduct.imagePresentation}` : ""}`} src={bestSellerProduct.image} alt={bestSellerProduct.imageAlt} width="800" height="800" fetchPriority="high" decoding="async" /><figcaption className="store-hero__photo-label">{store.bestSellerLabel}</figcaption></figure>}
           
         </div>
         <div className="store-hero__bottomline"><span>{store.descriptor}</span>{store.foundedYear && <span>desde {store.foundedYear}</span>}<span>{store.neighborhood}</span></div>
@@ -301,7 +372,7 @@ function StorefrontPage({ storeSlug }: StorefrontPageProps) {
           {visibleProducts.map((product, index) => (
             <article className="product-card" key={product.id} data-reveal style={{ "--card-order": index } as CSSProperties}>
               <button className="product-card__open" type="button" onClick={() => setSelectedProduct(product)} aria-label={`Ver detalhes de ${product.name}`}>
-                <div className="product-card__art-wrap">
+                <div className={`product-card__art-wrap${product.imagePresentation ? ` product-card__art-wrap--${product.imagePresentation}` : ""}`}>
                   {product.badge && <span className="product-card__badge">{product.badge}</span>}
                   <img className="product-card__photo" src={product.image} alt={product.imageAlt} width="800" height="1200" loading="lazy" decoding="async" />
                   <span className="product-card__quick-add" aria-hidden="true"><Plus size={18} /></span>
@@ -365,7 +436,7 @@ function ProductDialog({ product, storeName, onClose, onAdd }: ProductDialogProp
   return <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <section ref={dialogRef} className="product-dialog" role="dialog" aria-modal="true" aria-labelledby="product-dialog-title" tabIndex={-1}>
       <button className="icon-button product-dialog__close" type="button" onClick={onClose} aria-label="Fechar"><X size={20} /></button>
-      <div className="product-dialog__art"><img src={product.image} alt={product.imageAlt} width="800" height="1200" decoding="async" /></div>
+      <div className={`product-dialog__art${product.imagePresentation ? ` product-dialog__art--${product.imagePresentation}` : ""}`}><img src={product.image} alt={product.imageAlt} width="800" height="1200" decoding="async" /></div>
       <div className="product-dialog__content"><span className="eyebrow"><span /> FEITO NA {storeName.toLocaleUpperCase("pt-BR")}</span><h2 id="product-dialog-title">{product.name}</h2><p>{product.description}</p>
         {product.addons.length > 0 && <fieldset className="addon-list"><legend>Quer completar?</legend>{product.addons.map((addon) => <label key={addon.id}><input type="checkbox" checked={addonIds.includes(addon.id)} onChange={(event) => setAddonIds((current) => event.target.checked ? [...current, addon.id] : current.filter((id) => id !== addon.id))} /><span>{addon.name}</span><b>+ {money.format(addon.price)}</b></label>)}</fieldset>}
         <div className="product-dialog__actions"><div className="quantity-stepper" aria-label="Quantidade"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Diminuir"><Minus size={15} /></button><span>{quantity}</span><button type="button" onClick={() => setQuantity((value) => value + 1)} aria-label="Aumentar"><Plus size={15} /></button></div><button className="button button--primary" type="button" onClick={() => onAdd(product, quantity, addonIds)}>Adicionar · {money.format((product.price + extras) * quantity)}</button></div>

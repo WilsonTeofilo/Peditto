@@ -1,11 +1,11 @@
 import brownieImage from "../../assets/demo-stores/muru-muru-coffee/catalog/brownie.png";
 import cafeComLeiteImage from "../../assets/demo-stores/muru-muru-coffee/catalog/cafe-com-leite.png";
 import cafeChocolateImage from "../../assets/demo-stores/muru-muru-coffee/catalog/cafe-sabor-chocolate.png";
-import caramelMacchiatoImage from "../../assets/demo-stores/muru-muru-coffee/catalog/caramel-macchiato.png";
+import caramelMacchiatoImage from "../../assets/demo-stores/muru-muru-coffee/catalog/caramel-macchiato-card.webp";
 import coxinhaImage from "../../assets/demo-stores/muru-muru-coffee/catalog/coxinha.png";
 import croissantImage from "../../assets/demo-stores/muru-muru-coffee/catalog/croissant.png";
-import icedCoffeeImage from "../../assets/demo-stores/muru-muru-coffee/catalog/iced-coffee.png";
-import logo from "../../assets/demo-stores/muru-muru-coffee/brand/logo.webp";
+import icedCoffeeImage from "../../assets/demo-stores/muru-muru-coffee/catalog/iced-coffee-card.webp";
+import logo from "../../assets/demo-stores/muru-muru-coffee/brand/wordmark.webp";
 import type { StorefrontDemoData } from "./types";
 
 const muruMuruCoffee: StorefrontDemoData = {
@@ -18,7 +18,7 @@ const muruMuruCoffee: StorefrontDemoData = {
     foundedYear: 1988,
     deliveryTime: "15–30 min",
     openUntil: "Hoje, até 20h",
-    statusLabel: "Café passado na hora",
+    statusLabel: "Aberto para pedidos",
     logoUrl: logo,
     logoPresentation: "wordmark",
     introduction: {
@@ -49,10 +49,10 @@ const muruMuruCoffee: StorefrontDemoData = {
     { id: "salgados", label: "Salgados", icon: "✿" },
   ],
   products: [
-    { id: "caramel-macchiato", categoryId: "cafes", name: "Caramel macchiato", description: "Café espresso, leite vaporizado e caramelo da casa.", price: 16, image: caramelMacchiatoImage, imageAlt: "Caramel macchiato da Muru Muru Coffee", badge: "queridinho", addons: [] },
+    { id: "caramel-macchiato", categoryId: "cafes", name: "Caramel macchiato", description: "Café espresso, leite vaporizado e caramelo da casa.", price: 16, image: caramelMacchiatoImage, imageAlt: "Caramel macchiato da Muru Muru Coffee", imagePresentation: "portrait", badge: "queridinho", addons: [] },
     { id: "cafe-chocolate", categoryId: "cafes", name: "Café com chocolate", description: "Espresso com chocolate cremoso e leite vaporizado.", price: 14, image: cafeChocolateImage, imageAlt: "Café com chocolate da Muru Muru Coffee", addons: [] },
     { id: "cafe-com-leite", categoryId: "cafes", name: "Café com leite", description: "Espresso equilibrado com leite vaporizado.", price: 10, image: cafeComLeiteImage, imageAlt: "Café com leite da Muru Muru Coffee", addons: [] },
-    { id: "iced-coffee", categoryId: "gelados", name: "Iced coffee", description: "Café gelado com leite e gelo, preparado na hora.", price: 15, image: icedCoffeeImage, imageAlt: "Café gelado da Muru Muru Coffee", addons: [] },
+    { id: "iced-coffee", categoryId: "gelados", name: "Iced coffee", description: "Café gelado com leite e gelo, preparado na hora.", price: 15, image: icedCoffeeImage, imageAlt: "Café gelado da Muru Muru Coffee", imagePresentation: "portrait", addons: [] },
     { id: "croissant-muru", categoryId: "acompanhamentos", name: "Croissant da casa", description: "Massa folhada, dourada por fora e macia por dentro.", price: 13, image: croissantImage, imageAlt: "Croissant da Muru Muru Coffee", badge: "feito hoje", addons: [] },
     { id: "brownie-muru", categoryId: "acompanhamentos", name: "Brownie de chocolate", description: "Brownie intenso com casquinha fina e interior macio.", price: 12, image: brownieImage, imageAlt: "Brownie de chocolate da Muru Muru Coffee", addons: [] },
     { id: "coxinha-muru", categoryId: "salgados", name: "Coxinha de frango", description: "Massa macia, recheio de frango e tempero da casa.", price: 11, image: coxinhaImage, imageAlt: "Coxinha de frango da Muru Muru Coffee", addons: [] },

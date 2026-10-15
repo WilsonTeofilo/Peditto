@@ -87,11 +87,13 @@
   max-width: 650px;
   margin: 22px 0 18px;
   color: var(--ff-paper);
-  font: 400 clamp(54px, 6.4vw, 88px)/.9 var(--font-display);
+  font: 400 clamp(54px, 6.4vw, 88px)/1.02 var(--font-display);
   letter-spacing: -.012em;
   text-transform: uppercase;
 }
 .storefront--fast-food .store-hero h1 em {
+  display: inline-block;
+  margin-top: .08em;
   color: var(--ff-yellow);
   font-style: normal;
   font-weight: 400;
@@ -254,7 +256,8 @@
 .storefront--fast-food .store-search input::placeholder { color: var(--ff-muted); opacity: .8; }
 .storefront--fast-food .category-rail { gap: 10px; scrollbar-color: var(--ff-tomato) var(--ff-paper-deep); }
 .storefront--fast-food .category-chip {
-  min-width: 112px;
+  flex: 0 0 auto;
+  min-width: max-content;
   min-height: 58px;
   padding: 8px 13px;
   display: flex;
@@ -266,6 +269,7 @@
   color: var(--ff-ink);
   background: var(--ff-paper);
   font: 700 12px/1.2 var(--font-body);
+  white-space: nowrap;
   transition: color 150ms ease-out, background 150ms ease-out, transform 150ms ease-out, box-shadow 150ms ease-out;
 }
 .storefront--fast-food .category-chip:hover { transform: translateY(-2px); box-shadow: 3px 3px 0 var(--ff-ink); }

@@ -16,7 +16,7 @@ const gelattoTotosu: StorefrontDemoData = {
     foundedYear: 1999,
     deliveryTime: "20–35 min",
     openUntil: "Hoje, até 22h",
-    statusLabel: "Gelateria aberta",
+    statusLabel: "Aberto para pedidos",
     logoUrl: logo,
     introduction: {
       eyebrow: "Gelateria da Asai Ayumi",

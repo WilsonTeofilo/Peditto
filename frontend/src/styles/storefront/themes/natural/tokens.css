@@ -1,0 +1,30 @@
+.storefront--natural {
+  color-scheme: light;
+
+  --mm-forest: #1c3b2b;
+  --mm-forest-deep: #142d22;
+  --mm-cream: #e2ddc9;
+  --mm-paper: #f7f4e9;
+  --mm-sage: #ccd1b1;
+  --mm-sage-light: #e9e9d9;
+  --mm-coffee: #6d4935;
+  --mm-ink: #24372b;
+  --mm-muted: #5e6a5d;
+  --mm-line: #c8c5ac;
+
+  --store-cream: var(--mm-cream);
+  --store-paper: var(--mm-paper);
+  --store-plum: var(--mm-forest);
+  --store-berry: var(--mm-coffee);
+  --store-ink: var(--mm-ink);
+  --store-muted: var(--mm-muted);
+  --store-line: var(--mm-line);
+  --store-sun: var(--mm-sage);
+  --store-promo: var(--mm-forest);
+  --store-map: var(--mm-sage-light);
+  --store-status: var(--mm-sage);
+
+  --font-display: "Lora", Georgia, serif;
+  --font-body: "Montserrat", "Trebuchet MS", sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, monospace;
+}
