@@ -216,10 +216,22 @@ Regras: DTO request/response explícitos; allow-list de campos e unknown-propert
 
 **Estado:** Fase 6 concluída em domínio, aplicação, persistência e projeção pública. V14–V16 aplicadas e validadas no banco local; rotas continuam fechadas e upload desabilitado por configuração.
 
-### Fase 7 — vitrine, cliente e carrinho
+### Fase 7 — vitrine, temas por loja, cliente e carrinho
 
-- [x] Criar a primeira experiência visual React, mobile-first, em `/loja/demo`, com busca, categorias, produtos, detalhes/adicionais, sacola editável, endereço manual, solicitação opcional de localização, empty state, motion, foco por teclado e `prefers-reduced-motion`. O Restaurante Dona Erza, seus produtos, horários e mapa são dados fictícios de demonstração; essa tela não está conectada à API nem cria pedidos.
-- [ ] Conectar a vitrine ao catálogo público tenant-scoped e criar estados reais de loading/erro/loja fechada. Manter a identidade de cada loja em dados configuráveis, sem permitir CSS/HTML arbitrário do lojista.
+#### Experiência visual e escolha de tema
+
+- [x] Criar a primeira experiência visual React, mobile-first, em `/loja/demo`, com busca, categorias, produtos, detalhes/adicionais, sacola editável, endereço manual, solicitação opcional de localização, estados vazios, motion, foco por teclado e `prefers-reduced-motion`. O Restaurante Dona Erza e seus dados são fictícios; essa tela não está conectada à API nem cria pedidos.
+- [ ] Definir três presets fechados e responsivos, sem CSS livre: `PEDITTO_ORIGINAL` (roxo ameixa, amarelo quente e creme; Dona Erza), `FAST_FOOD_RED` (vermelho, amarelo e branco/creme; Maven Burger fictícia) e `CAFE_NATURAL_GREEN` (verdes e creme; Ravo Kafe fictícia). As referências de marcas servem apenas para associação cromática; não copiar marcas, mascotes, fontes ou layouts.
+- [ ] Criar a galeria pública pré-cadastro em `/demonstracao/temas`, depois da apresentação do produto/fluxo e antes de planos e cadastro. Mostrar Dona Erza, Maven Burger e Ravo Kafe com a mesma implementação de vitrine e fixtures distintas, alternáveis sem clonar páginas. Marcar como demonstração e `noindex`; sem autenticação, pedidos reais ou persistência.
+- [ ] Manter `/loja/demo` como atalho para a demonstração da Dona Erza no tema original. Deixar explícito que é uma vitrine fictícia, não a loja operacional de um cliente.
+- [ ] Criar no painel autenticado a prévia da própria loja e a seleção do preset. Só aplicar após confirmação explícita do proprietário/autorizado; o cliente público vê a seleção salva daquela loja. Trocar tema não pode alterar dados nem aparência de outro tenant.
+- [ ] Persistir `store_settings.theme_key` com default `PEDITTO_ORIGINAL`, coluna textual limitada por constraint e enum Java com `@Enumerated(EnumType.STRING)`. API aceita somente chaves allow-listed via DTO estrito; não receber CSS, HTML, classe, URL ou cores arbitrárias.
+- [ ] Resolver o tema da loja real no servidor pelo host/slug verificado e tenant correspondente. O frontend mapeia a chave para tokens locais imutáveis/CSS variables; query string, estado React e claims do cliente não definem a identidade visual persistida.
+- [ ] Proteger escrita com capability, CSRF, autorização por objeto e escopo tenant; manter rotas fechadas em `denyAll` até aprovação da matriz de autorização. Auditar alterações de tema e testar chave desconhecida, ID/slug adulterado e isolamento A↔B.
+
+#### Catálogo público, cliente e carrinho
+
+- [ ] Conectar a vitrine ao catálogo público tenant-scoped e criar estados reais de loading/erro/loja fechada. A projeção pública nunca inclui custo ou margem.
 - [ ] Definir política de conta cliente por loja; guardar telefone/e-mail mínimos, contato verificado quando preciso e endereços por cliente/tenant.
 - [ ] Carrinho anônimo com identificador aleatório/expirável e proteção contra troca de id; merge após login com revalidação de preço/disponibilidade.
 - [x] Na prévia, localização é solicitada somente após clique explícito; há fallback de endereço manual e o mapa avisa que é ilustrativo. Nenhuma decisão de cobertura é tomada pelo navegador.
@@ -231,7 +243,7 @@ Regras: DTO request/response explícitos; allow-list de campos e unknown-propert
 - [ ] Adicionar asset de logo tenant-scoped e fluxo de recorte/compressão no navegador, com revalidação e re-encode independentes no backend; upload continua desligado até revisar a rota.
 - [ ] Projetar o bloco “mais pedido” como seleção automática por pedidos concluídos e o segundo destaque como escolha do lojista, sem duplicar produto. Definir janela de popularidade e fallback de loja nova antes de codificar a consulta.
 
-**Limite desta entrega visual:** não liberar API nem apresentar a prévia como loja operacional. A Fase 7 segue aberta até conectar a projeção pública e implementar identidade/carrinho de cliente no servidor; checkout, snapshot e revalidação permanecem na Fase 8.
+**Limites e conclusão:** galeria pública é uma demonstração estática pré-cadastro; prévia do painel é privada e só grava após confirmação; vitrine operacional carrega tema e conteúdo da loja resolvida no servidor. A Fase 7 segue aberta até conectar projeção pública, identidade/carrinho e autorização server-side. Checkout, revalidação final e snapshot permanecem na Fase 8.
 
 ### Fase 8 — pedidos e fluxo da loja (MVP de operação)
 

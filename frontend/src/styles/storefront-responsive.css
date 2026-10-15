@@ -1,6 +1,7 @@
 @media (max-width: 900px) {
   .store-header { height: 94px; }
   .store-header__logo { width: 70px; height: 70px; }
+  .store-header__logo--wordmark { width: 88px; height: 66px; }
   .store-hero { width: 92vw; min-height: 470px; padding-inline: 3%; }
   .store-hero__sun { width: 250px; height: 250px; }
   .store-hero__art { min-height: 310px; }
@@ -11,11 +12,13 @@
 
 @media (max-width: 640px) {
   .storefront { padding-bottom: 68px; }
-  .storefront__topline { padding-inline: 16px; font-size: 8px; }
+  .storefront__topline { padding-inline: 16px; font-size: 8px; gap: 8px; }
+  .storefront__back-link { font-size: 8px; }
   .store-header { height: 88px; padding-inline: 16px; }
   .store-header__brand strong { font-size: 17px; }
   .store-header__brand small { font-size: 9px; }
   .store-header__logo { width: 64px; height: 64px; }
+  .store-header__logo--wordmark { width: 76px; height: 58px; }
   .store-header__mark { width: 34px; height: 34px; }
   .store-header__hours { margin-left: auto; margin-right: 13px; gap: 5px; font-size: 0; }
   .store-header__hours svg { width: 17px; height: 17px; }
@@ -84,6 +87,7 @@
   .store-header__brand { gap: 7px; }
   .store-header__brand strong { font-size: 15px; }
   .store-header__logo { width: 58px; height: 58px; }
+  .store-header__logo--wordmark { width: 68px; height: 52px; }
   .store-header__cart span { display: none; }
   .store-hero { padding-inline: 18px; }
   .store-hero__meta { flex-direction: column; gap: 8px; }

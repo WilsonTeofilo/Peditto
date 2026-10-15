@@ -12,6 +12,7 @@ function LandingHeader() {
             <a href="#problemas">Por que</a>
             <a href="#fluxo">Como funciona</a>
             <a href="#entrega">Área de entrega</a>
+            <a href="#temas">Visual da loja</a>
             <a href="#duvidas">Dúvidas</a>
           </nav>
           <div className="landing-header__actions">

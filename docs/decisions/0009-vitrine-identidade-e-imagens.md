@@ -9,7 +9,27 @@ A vitrine pública `/loja/demo` é uma demonstração antes do cadastro e não e
 
 ### Temas por loja
 
-Planejar três presets fechados e selecionáveis no painel: `PEDITTO_PURPLE_GOLD` (roxo e amarelo), `DELIVERY_RED_YELLOW` (vermelho, branco e amarelo) e `WARM_BROWN` (tons terrosos para cafés e restaurantes). Cada preset mapeia para tokens CSS definidos pelo produto. O tema fica associado à loja, é retornado apenas na projeção pública daquela loja e não aceita CSS, HTML, cores arbitrárias ou URLs fornecidos pelo usuário. A seleção exige autorização tenant-scoped no backend; nunca pode alterar a vitrine de outra loja.
+O lojista escolhe um preset fechado para personalizar a vitrine de sua única loja. A seleção padrão é o tema original Peditto; trocar o tema não altera catálogo, dados nem configuração de outras lojas.
+
+| Chave | Direção | Cores de referência | Demonstração fictícia |
+|---|---|---|---|
+| `PEDITTO_ORIGINAL` | Identidade original Peditto | roxo ameixa, amarelo quente e papel creme | Restaurante Dona Erza |
+| `FAST_FOOD_RED` | Delivery de ritmo rápido, apropriado a hamburguerias e pizzarias | vermelho, amarelo e branco/creme | Maven Burger |
+| `CAFE_NATURAL_GREEN` | Cafeterias e comida natural | verde floresta, verde sálvia e creme claro | Ravo Kafe |
+
+As referências de McDonald’s, Burger King e iFood indicam apenas a associação geral de cores com delivery/comida rápida. Não copiar nomes, logotipos, mascotes, fontes proprietárias ou layouts dessas marcas. As demonstrações Maven Burger e Ravo Kafe são fixtures fictícias para mostrar as paletas.
+
+### Galeria pública de demonstração
+
+Criar uma página pública única em `/demonstracao/temas`, acessível pela landing depois da explicação do produto/fluxo e antes de planos ou cadastro. Ela apresenta três prévias de lojas fictícias — Dona Erza, Maven Burger e Ravo Kafe — e permite alternar entre elas. A galeria reutiliza a mesma implementação de vitrine, alterando apenas fixture de conteúdo e preset; não criar três páginas/componentes clonados. É uma demonstração pré-cadastro, sem autenticação, API de pedidos ou persistência, e deve permanecer marcada como demonstração/noindex. A rota existente `/loja/demo` pode continuar abrindo diretamente Dona Erza no tema original.
+
+A prévia no painel autenticado é outro fluxo: o lojista vê como ficará a própria loja, seleciona um preset e confirma para salvar. Os clientes veem o tema confirmado na URL pública real da loja. Não confiar em query string, estado React ou cor enviada pelo navegador para definir o tema de uma loja real.
+
+### Implementação e isolamento
+
+Persistir a chave do preset em `store_settings.theme_key` como string limitada por constraint no PostgreSQL e enum Java com `@Enumerated(EnumType.STRING)`; evitar enum nativo do PostgreSQL para permitir evolução por migration. O default do banco e da aplicação é `PEDITTO_ORIGINAL`. Requests de configuração aceitam somente a chave allow-listed; responses públicas incluem somente a chave selecionada, nunca CSS ou valores livres.
+
+O frontend resolve cada chave por um mapa local imutável de tokens CSS/design tokens, aplicado em um contêiner da vitrine. Não injetar CSS, classes, URLs, estilos ou cores arbitrárias do lojista. O painel salva por endpoint privado tenant-scoped, com capability de escrita e proteção CSRF; o serviço confirma que o usuário é proprietário/autorizado e que a chave existe. A projeção pública resolve o tema da loja já encontrada pelo host/slug no servidor, dentro do mesmo tenant. Mudanças são auditáveis. Testar isolamento A↔B e garantir que trocar slug/ID ou manipular o seletor não altera nem revela a loja de terceiros.
 
 A vitrine poderá mostrar um logotipo quadrado e textos curtos definidos pelo lojista. O conteúdo é texto simples, com tamanho validado no servidor; o React faz escape normal. Não aceitar HTML, CSS, scripts, URLs de imagem externas ou temas arbitrários.
 

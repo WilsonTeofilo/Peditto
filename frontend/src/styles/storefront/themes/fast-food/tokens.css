@@ -1,0 +1,35 @@
+.storefront--fast-food {
+  color-scheme: light;
+
+  --ff-tomato: #c8201a;
+  --ff-ember: #8f1810;
+  --ff-yellow: #ffc629;
+  --ff-mustard: #d99a00;
+  --ff-paper: #fffbf0;
+  --ff-paper-deep: #f3e6d2;
+  --ff-ink: #3a0e0a;
+  --ff-muted: #68483f;
+  --ff-line: #d8bda2;
+  --ff-shadow-soft: color-mix(in srgb, var(--ff-ink) 18%, transparent);
+
+  --store-cream: var(--ff-paper);
+  --store-paper: var(--ff-paper);
+  --store-plum: var(--ff-tomato);
+  --store-berry: var(--ff-ember);
+  --store-ink: var(--ff-ink);
+  --store-muted: var(--ff-muted);
+  --store-line: var(--ff-line);
+  --store-sun: var(--ff-yellow);
+  --store-promo: var(--ff-yellow);
+  --store-map: var(--ff-paper-deep);
+  --store-status: var(--ff-yellow);
+
+  --font-display: "Anton", "Arial Narrow", Impact, sans-serif;
+  --font-body: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+  --font-mono: "Courier Prime", "Courier New", monospace;
+  --ff-signature: "Shrikhand", Georgia, serif;
+  --ff-note: "Caveat Brush", cursive;
+  --ff-border: 3px solid var(--ff-ink);
+  --ff-shadow: 5px 5px 0 var(--ff-ink);
+  --ff-shadow-large: 8px 8px 0 var(--ff-ink);
+}

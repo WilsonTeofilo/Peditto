@@ -6,6 +6,7 @@ import PainSection from "../components/landing/PainSection";
 import OrderFlowSection from "../components/landing/OrderFlowSection";
 import CalcSection from "../components/landing/CalcSection";
 import CompareSection from "../components/landing/CompareSection";
+import ThemeGallerySection from "../components/landing/ThemeGallerySection";
 import DeliveryAreaSection from "../components/landing/DeliveryAreaSection";
 import FaqSection from "../components/landing/FaqSection";
 import ClosingSection from "../components/landing/ClosingSection";
@@ -57,6 +58,7 @@ function LandingPage() {
         <DeliveryAreaSection />
         <CalcSection />
         <CompareSection />
+        <ThemeGallerySection />
         <FaqSection />
         <ClosingSection />
       </main>
