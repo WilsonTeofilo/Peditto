@@ -28,9 +28,13 @@
 
 .storefront--natural .store-header__brand { gap: 15px; }
 .storefront--natural .store-header__logo--wordmark {
-  width: 154px;
-  height: 82px;
+  width: 88px;
+  height: 88px;
+  flex: none;
+  padding: 5px;
+  border: 1px solid var(--mm-line);
   border-radius: 12px;
+  background: var(--mm-cream);
   object-fit: contain;
 }
 .storefront--natural .store-header__brand strong {

@@ -1,6 +1,6 @@
 @media (max-width: 900px) {
   .storefront--natural .store-header { height: 98px; }
-  .storefront--natural .store-header__logo--wordmark { width: 132px; height: 74px; }
+  .storefront--natural .store-header__logo--wordmark { width: 78px; height: 78px; }
   .storefront--natural .store-hero { min-height: 470px; gap: 25px; }
   .storefront--natural .store-hero__art { min-height: 320px; }
   .storefront--natural .store-hero__photo-frame { width: min(100%, 320px); height: 320px; }
@@ -21,7 +21,7 @@
   .storefront--natural .storefront__topline { min-height: 56px; }
   .storefront--natural .store-header { height: 84px; padding-inline: 14px; }
   .storefront--natural .store-header__brand { gap: 8px; }
-  .storefront--natural .store-header__logo--wordmark { width: 110px; height: 64px; }
+  .storefront--natural .store-header__logo--wordmark { width: 62px; height: 62px; }
   .storefront--natural .store-header__brand strong { font-size: 16px; }
   .storefront--natural .store-header__brand small { font-size: 9px; }
   .storefront--natural .store-header__hours { margin-right: 8px; }
@@ -99,7 +99,7 @@
 @media (max-width: 390px) {
   .storefront--natural .store-header { padding-inline: 10px; }
   .storefront--natural .store-header__brand { gap: 5px; }
-  .storefront--natural .store-header__logo--wordmark { width: 92px; height: 58px; }
+  .storefront--natural .store-header__logo--wordmark { width: 54px; height: 54px; }
   .storefront--natural .store-header__brand strong { font-size: 14px; }
   .storefront--natural .store-header__brand small { font-size: 8px; }
   .storefront--natural .store-header__hours { margin-right: 5px; }

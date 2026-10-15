@@ -108,6 +108,7 @@
 .theme-option--natural .theme-option__logo {
   width: min(68%, 265px);
   max-height: 127px;
+  clip-path: inset(0 round 12px);
   border-radius: 12px;
   mix-blend-mode: multiply;
 }
