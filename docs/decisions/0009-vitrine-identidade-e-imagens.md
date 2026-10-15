@@ -13,15 +13,15 @@ O lojista escolhe um preset fechado para personalizar a vitrine de sua única lo
 
 | Chave | Direção | Cores de referência | Demonstração fictícia |
 |---|---|---|---|
-| `PEDITTO_ORIGINAL` | Identidade original Peditto | roxo ameixa, amarelo quente e papel creme | Restaurante Dona Erza |
-| `FAST_FOOD_RED` | Delivery de ritmo rápido, apropriado a hamburguerias e pizzarias | vermelho, amarelo e branco/creme | Maven Burger |
-| `CAFE_NATURAL_GREEN` | Cafeterias e comida natural | verde floresta, verde sálvia e creme claro | Ravo Kafe |
+| `PEDITTO_ORIGINAL` | Identidade original Peditto | roxo ameixa, amarelo quente e papel creme | Gelatto Totosu |
+| `FAST_FOOD_RED` | Delivery de ritmo rápido, apropriado a hamburguerias e pizzarias | vermelho, amarelo e branco/creme | Restaurante Dona Erza |
+| `CAFE_NATURAL_GREEN` | Cafeterias e comida natural | verde floresta, verde sálvia e creme claro | Muru Muru Coffee |
 
-As referências de McDonald’s, Burger King e iFood indicam apenas a associação geral de cores com delivery/comida rápida. Não copiar nomes, logotipos, mascotes, fontes proprietárias ou layouts dessas marcas. As demonstrações Maven Burger e Ravo Kafe são fixtures fictícias para mostrar as paletas.
+As referências de McDonald’s, Burger King e iFood indicam apenas a associação geral de cores com delivery/comida rápida. Não copiar nomes, logotipos, mascotes, fontes proprietárias ou layouts dessas marcas. As três lojas de demonstração são fixtures fictícias para apresentar os presets.
 
 ### Galeria pública de demonstração
 
-Criar uma página pública única em `/demonstracao/temas`, acessível pela landing depois da explicação do produto/fluxo e antes de planos ou cadastro. Ela apresenta três prévias de lojas fictícias — Dona Erza, Maven Burger e Ravo Kafe — e permite alternar entre elas. A galeria reutiliza a mesma implementação de vitrine, alterando apenas fixture de conteúdo e preset; não criar três páginas/componentes clonados. É uma demonstração pré-cadastro, sem autenticação, API de pedidos ou persistência, e deve permanecer marcada como demonstração/noindex. A rota existente `/loja/demo` pode continuar abrindo diretamente Dona Erza no tema original.
+Implementação visual atual: a landing apresenta as três prévias na seção `/#temas`; cada card abre uma fixture em `/loja/gelatto-totosu`, `/loja/restaurante-dona-erza` ou `/loja/muru-muru-coffee`. A mesma implementação React renderiza as lojas, com conteúdo e preset próprios. As rotas são demonstrações pré-cadastro, sem autenticação, API de pedidos ou persistência, e permanecem marcadas como demonstração/noindex. `/loja/demo` é um alias legado para Dona Erza no preset fast-food vermelho. A persistência da seleção por tenant e a prévia autenticada seguem pendentes.
 
 A prévia no painel autenticado é outro fluxo: o lojista vê como ficará a própria loja, seleciona um preset e confirma para salvar. Os clientes veem o tema confirmado na URL pública real da loja. Não confiar em query string, estado React ou cor enviada pelo navegador para definir o tema de uma loja real.
 

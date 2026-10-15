@@ -7,7 +7,7 @@
 
 - Java 21 + Spring Boot 4.1.x, Spring MVC, Spring Security, Spring Data JPA/Hibernate e Bean Validation.
 - PostgreSQL como fonte relacional, Flyway como única forma de migration e Hibernate `ddl-auto=validate`. `NUMERIC`/`BigDecimal` para moeda; UUID; timestamps UTC (`timestamptz`).
-- React + TypeScript + Vite + Tailwind para app. API REST versionada JSON. MVC é controller HTTP fino, services/casos de uso, domínio e repositories; não expor repository CRUD automaticamente.
+- React + TypeScript + Vite para app. O frontend atual usa CSS modular e tokens em CSS variables; Tailwind foi uma proposta inicial e não está instalado. API REST versionada JSON. MVC é controller HTTP fino, services/casos de uso, domínio e repositories; não expor repository CRUD automaticamente.
 - Monólito modular inicialmente; não distribuir serviços até throughput/isolamento operacional justificarem o custo.
 - Docker Compose apenas para dev local, banco bind em loopback, senha por variável, sem dado real/seed de credenciais.
 

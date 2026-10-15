@@ -1,7 +1,7 @@
 # Revisão técnica e pendências do Peditto
 
 **Revisado em:** 15/10/2026
-**Escopo:** estado real do repositório após avanço das Fases 3 e 4. Este documento acompanha [`README_ROTEIRO_MVC_E_SAAS.md`](README_ROTEIRO_MVC_E_SAAS.md); manter ambos alinhados.
+**Escopo:** estado real do repositório após avanços das Fases 3 a 7, incluindo backend, frontend e gates pendentes. Este documento acompanha [`README_ROTEIRO_MVC_E_SAAS.md`](README_ROTEIRO_MVC_E_SAAS.md); manter ambos alinhados. Para retomada em chat novo, consultar também [`CONTEXTO_PARA_NOVO_CHAT.md`](CONTEXTO_PARA_NOVO_CHAT.md).
 
 ## Verificação local atual — 15/10/2026
 
@@ -120,17 +120,25 @@ Além dos três unit tests do cadastro, a suíte inclui cobertura geográfica e 
 
 ## Próximos passos ordenados
 
-1. Automatizar os gates da Fase 3: cadastro concorrente/trial único, OTP expirado/replay, login MFA, recuperação, rotação/reuso de sessão e rejeição de campos desconhecidos.
-2. Configurar SMTP/Twilio em ambiente de teste protegido e validar entrega, retries, expiração e logs redigidos. Não gravar segredos no projeto.
-3. Concluir testes integrados de concorrência e autenticação da Fase 3 antes de habilitar os canais reais fora de dev.
-4. Fechar troca de contato/MFA com reautenticação, step-up, verificação do novo destino, notificação no endereço anterior, cooldown e auditoria.
-5. Implementar o primeiro endpoint vertical de catálogo com DTO allow-list, capability server-side, tenant repository, RLS e casos negativos cross-tenant; só então liberar a rota.
-6. Implementar configuração da loja com DTOs explícitos/capabilities; expor domínio público apenas por host normalizado e proxy confiável definido.
+1. Fechar os gates restantes da Fase 3: testes de cadastro concorrente/trial único, OTP expirado/replay, login MFA, recuperação, rotação/reuso de sessão, payload desconhecido e autenticação integrada em browser.
+2. Configurar SMTP/Twilio somente em ambiente de teste protegido e validar entrega, retries, expiração, limites e logs redigidos. Não gravar segredos no projeto.
+3. Completar troca de contato/fator MFA com reautenticação/step-up, verificação do novo destino, notificação no anterior, cooldown e auditoria.
+4. Depois dos gates de identidade e autorização, planejar a integração segura da Fase 7: projeção pública de catálogo, tema allow-listed, editor autenticado e carrinho. Manter `anyRequest().denyAll()` até matriz de autorização aprovada; não abrir endpoint como parte de uma tarefa só visual.
+5. Preservar o estado concluído das Fases 4–6. Reabrir uma dessas fases apenas se surgir requisito novo ou falha comprovada, não para repetir sua implementação.
+6. Iniciar Fase 8 após definir checkout: revalidar no servidor preço, disponibilidade, zona/entrega e criar snapshots mínimos; não confiar em cálculos do navegador.
+
+## Frontend e organização atual — 15/10/2026
+
+- A vitrine de demonstração tem um único `StorefrontPage`, compartilhado por três fixtures e três skins. Gelatto Totosu usa `original` (Peditto roxo/creme/amarelo); Restaurante Dona Erza usa `fast-food` (vermelho/amarelo/creme); Muru Muru Coffee usa `natural` (verde floresta/sálvia/creme). Não duplicar páginas por loja e não tratar skins como mera troca de cor.
+- Rotas fictícias: `/loja/gelatto-totosu`, `/loja/restaurante-dona-erza`, `/loja/muru-muru-coffee`; `/loja/demo` é alias legado para Dona Erza. A galeria fica em `/#temas`. São demonstrações estáticas, `noindex`, sem API de loja, conta, persistência ou pedido real.
+- Fixtures e metadados da galeria ficam em `frontend/src/data/demo-stores/`; imagens que entram no build ficam em `frontend/src/assets/demo-stores/`; skins ficam em `frontend/src/styles/storefront/themes/`; materiais-fonte e referências ficam em `docs/ux/demo-stores/`, fora de `src/` e `public/`. O mapa de arquitetura está em [`frontend/README.md`](../frontend/README.md) e [`docs/ux/README.md`](ux/README.md).
+- A reorganização em andamento removeu materiais-fonte e duplicatas exatas do bundle, moveu fontes de arte para documentação e separou configuração dos cards da galeria do JSX. O trabalho está apenas no diretório local neste momento; preservar e revisar o diff antes de qualquer limpeza, reset, commit ou push.
+- `npm run build` passou após a reorganização anterior. Não foram executados testes automatizados nesta atualização documental.
 
 ## Referências de implementação
 
 - Roteiro completo e critérios de aceite: [`README_ROTEIRO_MVC_E_SAAS.md`](README_ROTEIRO_MVC_E_SAAS.md).
-- Decisão de identidade/sessão: [`decisions/0002-identidade-e-sessao.md`](decisions/0002-identidade-e-sessao.md).
+- Decisão de identidade/sessão: [`decisions/0002-identidade-autenticacao-e-sessao.md`](decisions/0002-identidade-autenticacao-e-sessao.md).
 - Provedores de OTP escolhidos: [`decisions/0007-adiamento-de-provedores.md`](decisions/0007-adiamento-de-provedores.md).
 - RLS e contexto de tenant: [`decisions/0008-rls-tenant-context.md`](decisions/0008-rls-tenant-context.md).
 - Threat model: [`security/THREAT_MODEL_MVP.md`](security/THREAT_MODEL_MVP.md).

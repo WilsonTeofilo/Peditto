@@ -17,6 +17,14 @@ Este documento complementa a especificação de segurança e o [roteiro de fases
 - **Abstrações proporcionais.** Use polimorfismo/Strategy quando houver variações reais e estáveis; não crie interface para cada classe nem framework interno antes do primeiro caso concreto.
 - **Sem otimização prematura.** Primeiro uma solução simples e correta; otimizar quando volume, latência ou custo justificar. Registrar a medição e preservar a mesma regra de negócio.
 
+## Clean Code e padrões de projeto
+
+As ideias de *Clean Code*, de Robert C. Martin, são referência de revisão, não uma lista dogmática de limites. Aplicar nomes que revelem intenção, funções coesas, responsabilidades claras, tratamento explícito de erros, redução de duplicação e testes de comportamento. Não impor tamanho universal de função/arquivo, nem quebrar um fluxo simples em helpers só para cumprir uma regra estética.
+
+Na arquitetura modular MVC, manter controller HTTP fino, caso de uso/application service responsável pela orquestração, domínio responsável por invariantes e repository responsável por consultas/persistência. Adapters isolam integrações externas. Dependências devem apontar para regras estáveis; não colocar regra de negócio no React ou no controller.
+
+Design patterns entram quando resolvem uma variação ou acoplamento observável: Strategy para políticas/providers realmente intercambiáveis, Adapter para integrações externas, e transições explícitas para máquinas de estado. Não criar uma interface, factory, manager ou camada para cada classe por hábito. Escolher a solução mais simples que preserve segurança, legibilidade e evolução.
+
 ## Comentários
 
 Comentários são para **por que**, invariantes, limitações externas ou decisões que o código não revela. Não narrar cada linha nem repetir o nome do método. Documentar contratos públicos e algoritmos cuja correção dependa de uma pré-condição. Manter comentário junto ao código que explica e atualizá-lo na mesma mudança.

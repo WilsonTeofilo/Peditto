@@ -1,15 +1,15 @@
 # Peditto — Arquitetura e plano de reconstrução SaaS
 
 > Documento de arquitetura, plano e estado da implementação.
-> O produto está sendo construído em Java + Spring Boot, React, Tailwind CSS e PostgreSQL, com API REST e isolamento entre lojas.
+> O produto usa Java + Spring Boot, React + TypeScript + Vite e PostgreSQL, com API REST e isolamento entre lojas. O frontend atual usa CSS modular e tokens em CSS variables; Tailwind não está instalado.
 
 ## Estado da implementação — 15/10/2026
 
-A fundação usa Java 21 + Spring Boot 4.1.1, JPA e Flyway. V1–V16 foram aplicadas no PostgreSQL local 17.11; Flyway validou as migrations, Hibernate `ddl-auto=validate` passou e a aplicação iniciou em porta aleatória. `peditto_app` não tem `SUPERUSER`/`BYPASSRLS` e RLS está forçada em tabelas tenant-owned. Fases 4, 5 e 6 estão concluídas no backend: setup da loja, catálogo scoped, disponibilidade operacional, histórico imutável de preço, storage privado preparado e projeção pública sem campos de custo/margem. A API continua inacessível por `anyRequest().denyAll()` e uploads continuam desligados. A Fase 3 segue aberta para validação integrada de MFA, step-up, provedores externos e concorrência. Consulte [`docs/REVISAO_TECNICA_E_PENDENCIAS.md`](docs/REVISAO_TECNICA_E_PENDENCIAS.md) e [`docs/README_ROTEIRO_MVC_E_SAAS.md`](docs/README_ROTEIRO_MVC_E_SAAS.md).
+A fundação usa Java 21 + Spring Boot 4.1.1, JPA e Flyway. V1–V16 foram aplicadas no PostgreSQL local 17.11; Flyway validou as migrations, Hibernate `ddl-auto=validate` passou e a aplicação iniciou em porta aleatória. `peditto_app` não tem `SUPERUSER`/`BYPASSRLS` e RLS está forçada em tabelas tenant-owned. Fases 4, 5 e 6 estão concluídas no backend. A API continua inacessível por `anyRequest().denyAll()` e uploads continuam desligados. A Fase 3 segue aberta para validação integrada de MFA, step-up, provedores externos e concorrência. A Fase 7 tem uma experiência visual funcional de demonstração com três lojas fictícias, mas ainda não está integrada à API nem aceita pedidos reais. Consulte o [handoff para o próximo chat](docs/CONTEXTO_PARA_NOVO_CHAT.md), o [relatório técnico](docs/REVISAO_TECNICA_E_PENDENCIAS.md) e o [roteiro de fases](docs/README_ROTEIRO_MVC_E_SAAS.md).
 
 As regras de legibilidade, comentários enxutos, manutenibilidade e uso criterioso de estruturas/complexidade algorítmica estão em [`docs/PADROES_DE_CODIGO_E_ALGORITMOS.md`](docs/PADROES_DE_CODIGO_E_ALGORITMOS.md). São parte do padrão de implementação para backend e frontend.
 
-Na revisão de 14/10/2026, modelos JPA compactados foram reformatados, SQL duplicado de rate limit foi centralizado e os primeiros fluxos de identidade, entrega de OTP, tenancy e interface foram implementados. A página pública já apresenta o problema que o produto resolve e o cadastro; a autenticação oferece MFA por e-mail/SMS. O build do frontend passou. O estado atualizado do backend e seus gates estão descritos no relatório técnico; testes automatizados da autenticação ainda não foram executados.
+Em 15/10/2026, a vitrine demonstrativa foi organizada para reutilizar um esqueleto React com fixtures de conteúdo e três skins independentes. A documentação de arquitetura, identidade e fases descreve os limites entre demonstração, produto conectado e segurança. Consulte o handoff antes de continuar; ele aponta os documentos de referência e o estado local do Git.
 ## 1. Objetivo e premissa
 
 O projeto de origem, **Chokko Melt**, é um sistema web de pedidos e gestão para confeitaria, criado como TCC e estudo de caso de um negócio no Grajaú, São Paulo. A nova iniciativa, em `D:\Projetos\Peditto`, transforma essa premissa em um SaaS de delivery/gestão que possa atender várias lojas independentes.
@@ -114,7 +114,7 @@ Começar com um **monólito modular** com fronteiras claras, API stateless e pro
 
 - Java LTS atual suportado pelo ambiente na época da implementação; Spring Boot, Spring MVC, Spring Security, Spring Data JPA/Hibernate, Bean Validation, Actuator restrito.
 - PostgreSQL com Flyway (ou Liquibase, escolher um só), transações e `NUMERIC` para valores monetários; nunca `float/double` para dinheiro.
-- React + TypeScript, Vite, Tailwind CSS com tokens próprios, cliente HTTP centralizado, validação UX que não substitui backend.
+- React + TypeScript + Vite; CSS modular com tokens em CSS variables, cliente HTTP centralizado e validação UX que não substitui backend. Não há Tailwind no frontend atual.
 - OpenAPI/Swagger apenas em ambiente autorizado e sem expor endpoints internos/segredos.
 - Docker Compose para desenvolvimento; produção com TLS, proxy confiável, gestão de segredos, backups e observabilidade.
 - Dependências fixadas, atualização automatizada, análise de vulnerabilidade e SBOM no pipeline.
@@ -278,15 +278,15 @@ Prefixo `/api/v1`. JSON explícito, paginação limitada, filtros allow-listed, 
 
 ### Temas por loja e galeria de demonstração
 
-Cada loja escolhe um preset visual fechado, isolado por tenant: `PEDITTO_ORIGINAL` (roxo, amarelo e creme; Restaurante Dona Erza), `FAST_FOOD_RED` (vermelho, amarelo e creme; Maven Burger fictícia) e `CAFE_NATURAL_GREEN` (verde e creme; Ravo Kafe fictícia). As referências visuais orientam paleta e clima; marcas, mascotes e layouts não serão copiados.
+Cada loja escolhe um preset visual fechado, isolado por tenant: `PEDITTO_ORIGINAL` (roxo, amarelo e creme; Gelatto Totosu), `FAST_FOOD_RED` (vermelho, amarelo e creme; Restaurante Dona Erza) e `CAFE_NATURAL_GREEN` (verde e creme; Muru Muru Coffee). As referências visuais orientam paleta e clima; marcas, mascotes e layouts não serão copiados.
 
-A galeria pré-cadastro `/demonstracao/temas` apresenta as três lojas fictícias usando a mesma vitrine React e fixtures diferentes, sem páginas clonadas. Ela fica após a explicação do produto e antes de planos/cadastro e é marcada como demonstração/noindex. `/loja/demo` continua sendo o atalho para Dona Erza. No painel autenticado, o lojista pré-visualiza e confirma o tema da própria loja; a vitrine pública recebe do servidor somente a chave do preset resolvido para o host/slug daquela loja.
+A galeria pré-cadastro na seção `/#temas` apresenta as três lojas fictícias usando a mesma vitrine React e fixtures diferentes, sem páginas clonadas. Cada card abre `/loja/<slug>` e as rotas de demonstração são marcadas como `noindex`. `/loja/demo` permanece como alias legado para Dona Erza. No painel autenticado, o lojista pré-visualiza e confirma o tema da própria loja; a vitrine pública recebe do servidor somente a chave do preset resolvido para o host/slug daquela loja. Fixtures e previews ficam em `frontend/src/data/demo-stores/`, skins em `frontend/src/styles/storefront/themes/`, imagens usadas em `frontend/src/assets/demo-stores/` e originais/referências fora do bundle em `docs/ux/demo-stores/`.
 
 O backend valida uma allow-list de chaves e persiste `store_settings.theme_key` (default `PEDITTO_ORIGINAL`); o frontend associa cada chave a tokens locais imutáveis. Não aceitar CSS/HTML/cores arbitrárias nem confiar em query string ou estado do navegador. Escrita exige autorização por objeto, tenant, capability e CSRF; rotas continuam fechadas até a matriz de autorização ser aprovada. Ver [`docs/decisions/0009-vitrine-identidade-e-imagens.md`](docs/decisions/0009-vitrine-identidade-e-imagens.md) e a [Fase 7](docs/README_ROTEIRO_MVC_E_SAAS.md#fase-7--vitrine-temas-por-loja-cliente-e-carrinho).
 
 ### Tokens e componentes React
 
-Guardar tokens em CSS variables e Tailwind theme (`color.paper`, `ink`, `plum`, `lavender`, `terracotta`, `line`; fontes display/body/mono; sombras e raios discretos). Componentes acessíveis e reutilizáveis: `WindowFrame`, `TitleBar`, `RetroButton`, `ProductCard`, `CategoryRail`, `OrderStatus`, `PriceTag`, `ConfirmDialog`, `FormField`, `Toast`, `EmptyState`. Não espalhar cores hexadecimais nem criar design system genérico sem identidade.
+Guardar tokens em CSS variables com nomes semânticos (papel, tinta, ameixa, lavanda, terracota e linhas; fontes display/body/mono; sombras e raios discretos). Componentes acessíveis e reutilizáveis devem surgir conforme os fluxos reais forem implementados. Não espalhar cores hexadecimais nem criar design system genérico sem identidade.
 
 ## 9. Organização proposta do repositório
 
@@ -329,7 +329,7 @@ Manter módulos funcionais completos, nomes explícitos e arquivos de tamanho ra
 
 ## 11. Fases recomendadas
 
-A ordem executável está detalhada em [`docs/README_ROTEIRO_MVC_E_SAAS.md`](docs/README_ROTEIRO_MVC_E_SAAS.md). V9–V16 e RLS A↔B foram validadas localmente. As Fases 4, 5 e 6 estão concluídas no backend; rotas seguem fechadas e upload desligado. A Fase 7 começou com a vitrine React da Dona Erza. Galeria pública de três temas fictícios, persistência isolada do preset por loja, integração de API, conta de cliente e carrinho seguro continuam pendentes. SEO avançado continua na Fase 13.
+A ordem executável está detalhada em [`docs/README_ROTEIRO_MVC_E_SAAS.md`](docs/README_ROTEIRO_MVC_E_SAAS.md). V9–V16 e RLS A↔B foram validadas localmente. As Fases 4, 5 e 6 estão concluídas no backend; rotas seguem fechadas e upload desligado. Na Fase 7, o esqueleto React, as três identidades visuais de demonstração e a galeria pré-cadastro estão implementados. Integração com a API, persistência isolada do preset, conta do cliente e carrinho seguro continuam pendentes. SEO avançado continua na Fase 13.
 
 A migração de dados do Chokko Melt continua opcional: não copiar o banco de TCC diretamente. Se os dados forem necessários, criar importador com mapeamento, validação, relatório de rejeições e tenant escolhido; nunca importar credenciais de exemplo.
 

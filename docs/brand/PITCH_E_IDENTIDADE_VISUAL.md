@@ -1,6 +1,6 @@
 # Peditto — pitch e identidade visual
 
-**Atualizado em:** 14/10/2026  
+**Atualizado em:** 15/10/2026
 **Propósito:** orientar a página pública, os textos de produto e o uso da mascote.
 
 ## Pitch da página inicial
@@ -52,6 +52,20 @@ O produto combina essa identidade com superfícies de papel, bordas visíveis, s
 - Preservar cabelo, roupa, proporção chibi, paleta, contorno e desenho do guia. Novas poses exigem origem/arte aprovada, não redesenho automático que altere a identidade.
 - Motion curto e com propósito: personagem respirando/flutuando levemente, pedidos entrando na janela e transições ao rolar. Respeitar `prefers-reduced-motion`; nada deve atrasar o CTA nem exigir movimento para entender a página.
 - Emojis não substituem ícones. Texto fica direto e específico; não usar promessas de marketing que o produto não consegue provar.
+
+## Vitrines de demonstração e presets
+
+A vitrine pública de demonstração apresenta três lojas fictícias com um esqueleto React compartilhado e identidades completas próprias. O tema muda direção artística, tipografia, composição, componentes visuais e movimento; não é somente uma troca de paleta.
+
+| Preset | Loja fictícia | Direção visual |
+|---|---|---|
+| Peditto original | Gelatto Totosu | Ameixa, amarelo quente e creme; identidade acolhedora da Peditto. |
+| Fast food | Restaurante Dona Erza | Vermelho, amarelo e creme; ritmo de lanchonete, confeitaria e delivery. |
+| Café natural | Muru Muru Coffee | Verde floresta, sálvia, marfim e marrom café; cafeteria artesanal e familiar. |
+
+Muru Muru foi fundada em 1988 por Alberto José e fica no bairro Pilar, em Ouro Preto–MG. Hoje Alberto Júnior gerencia o negócio e Wilson Teófilo cuida da cozinha e aprimora as receitas antigas. Esse contexto é específico da fixture fictícia e não deve virar texto genérico do produto.
+
+As rotas `/loja/gelatto-totosu`, `/loja/restaurante-dona-erza` e `/loja/muru-muru-coffee` são demonstrações pré-cadastro, com dados ilustrativos, sem API, persistência ou pedidos reais. A galeria está em `/#temas`; `/loja/demo` é um alias legado para Dona Erza. A estratégia de implementação e segurança está em [`docs/decisions/0009-vitrine-identidade-e-imagens.md`](../decisions/0009-vitrine-identidade-e-imagens.md), e o mapa de assets está em [`docs/ux/README.md`](../ux/README.md).
 
 ## SEO e aquisição orgânica
 
