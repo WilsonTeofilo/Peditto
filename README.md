@@ -276,6 +276,14 @@ Prefixo `/api/v1`. JSON explícito, paginação limitada, filtros allow-listed, 
 - Copy em português direto e concreto, sem chuva de emoji nem jargão de marketing. Ícones de pasta/disquete só quando fizerem parte da metáfora visual.
 - Mobile-first. Referência delivery guia a vitrine; painel do comerciante deve otimizar fila, catálogo e financeiro em desktop/tablet e continuar responsivo.
 
+### Temas por loja e galeria de demonstração
+
+Cada loja escolhe um preset visual fechado, isolado por tenant: `PEDITTO_ORIGINAL` (roxo, amarelo e creme; Restaurante Dona Erza), `FAST_FOOD_RED` (vermelho, amarelo e creme; Maven Burger fictícia) e `CAFE_NATURAL_GREEN` (verde e creme; Ravo Kafe fictícia). As referências visuais orientam paleta e clima; marcas, mascotes e layouts não serão copiados.
+
+A galeria pré-cadastro `/demonstracao/temas` apresenta as três lojas fictícias usando a mesma vitrine React e fixtures diferentes, sem páginas clonadas. Ela fica após a explicação do produto e antes de planos/cadastro e é marcada como demonstração/noindex. `/loja/demo` continua sendo o atalho para Dona Erza. No painel autenticado, o lojista pré-visualiza e confirma o tema da própria loja; a vitrine pública recebe do servidor somente a chave do preset resolvido para o host/slug daquela loja.
+
+O backend valida uma allow-list de chaves e persiste `store_settings.theme_key` (default `PEDITTO_ORIGINAL`); o frontend associa cada chave a tokens locais imutáveis. Não aceitar CSS/HTML/cores arbitrárias nem confiar em query string ou estado do navegador. Escrita exige autorização por objeto, tenant, capability e CSRF; rotas continuam fechadas até a matriz de autorização ser aprovada. Ver [`docs/decisions/0009-vitrine-identidade-e-imagens.md`](docs/decisions/0009-vitrine-identidade-e-imagens.md) e a [Fase 7](docs/README_ROTEIRO_MVC_E_SAAS.md#fase-7--vitrine-temas-por-loja-cliente-e-carrinho).
+
 ### Tokens e componentes React
 
 Guardar tokens em CSS variables e Tailwind theme (`color.paper`, `ink`, `plum`, `lavender`, `terracotta`, `line`; fontes display/body/mono; sombras e raios discretos). Componentes acessíveis e reutilizáveis: `WindowFrame`, `TitleBar`, `RetroButton`, `ProductCard`, `CategoryRail`, `OrderStatus`, `PriceTag`, `ConfirmDialog`, `FormField`, `Toast`, `EmptyState`. Não espalhar cores hexadecimais nem criar design system genérico sem identidade.
@@ -321,7 +329,7 @@ Manter módulos funcionais completos, nomes explícitos e arquivos de tamanho ra
 
 ## 11. Fases recomendadas
 
-A ordem executável está detalhada em [`docs/README_ROTEIRO_MVC_E_SAAS.md`](docs/README_ROTEIRO_MVC_E_SAAS.md). V9–V16 e RLS A↔B foram validadas localmente. As Fases 4, 5 e 6 estão concluídas no backend; rotas seguem fechadas e upload desligado. A Fase 7 começou com uma vitrine React de demonstração; integração de API, personalização, conta de cliente e carrinho seguro ainda estão pendentes. SEO avançado continua na Fase 13.
+A ordem executável está detalhada em [`docs/README_ROTEIRO_MVC_E_SAAS.md`](docs/README_ROTEIRO_MVC_E_SAAS.md). V9–V16 e RLS A↔B foram validadas localmente. As Fases 4, 5 e 6 estão concluídas no backend; rotas seguem fechadas e upload desligado. A Fase 7 começou com a vitrine React da Dona Erza. Galeria pública de três temas fictícios, persistência isolada do preset por loja, integração de API, conta de cliente e carrinho seguro continuam pendentes. SEO avançado continua na Fase 13.
 
 A migração de dados do Chokko Melt continua opcional: não copiar o banco de TCC diretamente. Se os dados forem necessários, criar importador com mapeamento, validação, relatório de rejeições e tenant escolhido; nunca importar credenciais de exemplo.
 

@@ -47,6 +47,12 @@ const rows: ComparisonRow[] = [
     messages: { tone: "depends", text: "Precisa usar o mensageiro" },
   },
   {
+    feature: "Personalização da vitrine",
+    peditto: { tone: "positive", text: "Temas visuais para combinar com sua loja" },
+    platforms: { tone: "depends", text: "Aparência definida pela plataforma" },
+    messages: { tone: "depends", text: "Visual livre, montagem manual" },
+  },
+  {
     feature: "Custo para a loja",
     peditto: { tone: "negative", text: "Assinatura mensal" },
     platforms: { tone: "depends", text: "Taxas e planos variam" },

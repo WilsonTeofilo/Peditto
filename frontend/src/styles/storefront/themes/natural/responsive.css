@@ -1,0 +1,114 @@
+@media (max-width: 900px) {
+  .storefront--natural .store-header { height: 98px; }
+  .storefront--natural .store-header__logo--wordmark { width: 78px; height: 78px; }
+  .storefront--natural .store-hero { min-height: 470px; gap: 25px; }
+  .storefront--natural .store-hero__art { min-height: 320px; }
+  .storefront--natural .store-hero__photo-frame { width: min(100%, 320px); height: 320px; }
+  .storefront--natural .store-promo,
+  .storefront--natural .menu-section,
+  .storefront--natural .delivery-section { width: 90vw; }
+}
+
+@media (max-width: 760px) {
+  .storefront--natural .store-hero { grid-template-columns: 1fr; gap: 15px; }
+  .storefront--natural .store-hero__copy { max-width: 620px; }
+  .storefront--natural .store-hero__art { width: min(100%, 410px); margin: 0 auto; }
+  .storefront--natural .store-hero__bottomline { gap: 12px; }
+  .storefront--natural .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .storefront--natural .storefront__topline { min-height: 56px; }
+  .storefront--natural .store-header { height: 84px; padding-inline: 14px; }
+  .storefront--natural .store-header__brand { gap: 8px; }
+  .storefront--natural .store-header__logo--wordmark { width: 62px; height: 62px; }
+  .storefront--natural .store-header__brand strong { font-size: 16px; }
+  .storefront--natural .store-header__brand small { font-size: 9px; }
+  .storefront--natural .store-header__hours { margin-right: 8px; }
+  .storefront--natural .store-header__cart { min-height: 39px; padding-inline: 9px; font-size: 11px; }
+  .storefront--natural .store-hero {
+    width: 100%;
+    min-height: 0;
+    margin: 0 auto 68px;
+    padding: 36px 22px 70px;
+    gap: 9px;
+  }
+  .storefront--natural .store-hero h1 { margin: 17px 0 13px; font-size: clamp(38px, 10vw, 55px); }
+  .storefront--natural .eyebrow { font-size: 11px; }
+  .storefront--natural .store-hero__copy > p { font-size: 12px; }
+  .storefront--natural .store-hero__meta { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .storefront--natural .store-hero__art { min-height: 292px; width: min(100%, 330px); }
+  .storefront--natural .store-hero__photo-frame { width: min(100%, 286px); height: 286px; padding: 7px; box-shadow: 6px 6px 0 rgb(109 73 53 / 20%); }
+  .storefront--natural .store-hero__photo-label { right: -8px; bottom: 14px; padding: 8px 10px; }
+  .storefront--natural .store-hero__bottomline { right: 22px; bottom: 16px; left: 22px; display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; font-size: 8px; }
+  .storefront--natural .store-hero__bottomline span:last-child { grid-column: 1 / -1; }
+  .storefront--natural .store-promo {
+    width: calc(100% - 36px);
+    min-height: 0;
+    margin: 0 auto 68px;
+    padding: 25px 22px 20px;
+    grid-template-columns: 1fr;
+    gap: 0;
+    box-shadow: 5px 5px 0 var(--mm-sage);
+  }
+  .storefront--natural .store-promo__copy { width: 100%; max-width: 100%; }
+  .storefront--natural .store-promo h2 { max-width: 15ch; font-size: 31px; }
+  .storefront--natural .store-promo p { max-width: 34ch; font-size: 11px; }
+  .storefront--natural .store-promo__seal {
+    position: relative;
+    inset: auto;
+    justify-self: end;
+    width: 48px;
+    height: 48px;
+    margin-top: 13px;
+  }
+  .storefront--natural .store-promo__art {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    grid-row: 2;
+    width: 100%;
+    height: 190px;
+    margin-top: 19px;
+    border-width: 5px;
+    transform: none;
+  }
+  .storefront--natural .store-promo:hover .store-promo__art { transform: translateY(-3px); }
+  .storefront--natural .menu-section,
+  .storefront--natural .delivery-section { width: calc(100% - 36px); }
+  .storefront--natural .menu-section { padding-bottom: 62px; }
+  .storefront--natural .menu-section__heading { margin-bottom: 18px; align-items: stretch; flex-direction: column; gap: 13px; }
+  .storefront--natural .menu-section h2,
+  .storefront--natural .delivery-section h2 { font-size: 32px; }
+  .storefront--natural .store-search { width: 100%; height: 45px; }
+  .storefront--natural .category-rail { margin-right: -18px; gap: 8px; }
+  .storefront--natural .category-chip { min-width: max-content; min-height: 54px; padding-inline: 12px; font-size: 10px; }
+  .storefront--natural .product-grid { gap: 15px 12px; }
+  .storefront--natural .product-card__art-wrap { aspect-ratio: 1 / 1; }
+  .storefront--natural .product-card__art-wrap--portrait { aspect-ratio: 1 / 1; }
+  .storefront--natural .product-card__body { padding: 12px 11px 14px; }
+  .storefront--natural .product-card__category { font-size: 8px; }
+  .storefront--natural .product-card h3 { margin: 7px 0 5px; font-size: 16px; }
+  .storefront--natural .product-card p { min-height: 48px; margin-bottom: 9px; font-size: 10px; }
+  .storefront--natural .product-card__body > strong { font-size: 16px; }
+  .storefront--natural .delivery-section { margin-bottom: 52px; padding: 22px; grid-template-columns: 1fr; gap: 18px; }
+  .storefront--natural .delivery-map { min-height: 235px; }
+  .storefront--natural .store-footer { padding: 19px; }
+}
+
+@media (max-width: 390px) {
+  .storefront--natural .store-header { padding-inline: 10px; }
+  .storefront--natural .store-header__brand { gap: 5px; }
+  .storefront--natural .store-header__logo--wordmark { width: 54px; height: 54px; }
+  .storefront--natural .store-header__brand strong { font-size: 14px; }
+  .storefront--natural .store-header__brand small { font-size: 8px; }
+  .storefront--natural .store-header__hours { margin-right: 5px; }
+  .storefront--natural .store-header__cart { padding-inline: 7px; }
+  .storefront--natural .store-hero { padding-inline: 18px; }
+  .storefront--natural .store-hero__bottomline { right: 18px; left: 18px; }
+  .storefront--natural .product-grid { grid-template-columns: 1fr; }
+  .storefront--natural .product-card__art-wrap,
+  .storefront--natural .product-card__art-wrap--portrait { aspect-ratio: 1 / 1; }
+  .storefront--natural .product-card h3 { font-size: 19px; }
+  .storefront--natural .product-card p { min-height: 0; font-size: 11px; }
+}

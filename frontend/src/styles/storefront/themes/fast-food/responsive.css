@@ -1,0 +1,147 @@
+@media (max-width: 900px) {
+  .storefront--fast-food .store-header { height: 92px; }
+  .storefront--fast-food .store-hero {
+    min-height: 530px;
+    padding: 52px 5vw 92px;
+    gap: 24px;
+  }
+  .storefront--fast-food .store-hero h1 { font-size: clamp(52px, 7vw, 76px); }
+  .storefront--fast-food .store-hero__art { min-height: 330px; }
+  .storefront--fast-food .store-hero__sun { width: 78%; }
+  .storefront--fast-food .store-hero__photo-frame { width: min(100%, 340px); }
+  .storefront--fast-food .store-promo,
+  .storefront--fast-food .menu-section,
+  .storefront--fast-food .delivery-section { width: 90vw; }
+  .storefront--fast-food .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .storefront--fast-food .store-hero {
+    min-height: 0;
+    padding: 44px 6vw 28px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .storefront--fast-food .store-hero__copy { max-width: 620px; }
+  .storefront--fast-food .store-hero h1 { max-width: 560px; font-size: clamp(54px, 11vw, 82px); }
+  .storefront--fast-food .store-hero__art { width: min(100%, 440px); min-height: 350px; margin: 0 auto; }
+  .storefront--fast-food .store-hero__bottomline {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 7px;
+    margin-top: 10px;
+  }
+  .storefront--fast-food .store-promo { min-height: 280px; }
+}
+
+@media (max-width: 640px) {
+  .storefront--fast-food { padding-bottom: 74px; }
+  .storefront--fast-food .storefront__topline { padding-inline: 14px; font-size: 10px; }
+
+  .storefront--fast-food .store-header { height: 82px; padding-inline: 14px; }
+  .storefront--fast-food .store-header__brand { gap: 9px; }
+  .storefront--fast-food .store-header__logo { width: 58px; height: 58px; }
+  .storefront--fast-food .store-header__brand strong { font-size: 18px; }
+  .storefront--fast-food .store-header__brand small { font-size: 10px; }
+  .storefront--fast-food .store-header__hours { margin-left: auto; margin-right: 10px; gap: 4px; font-size: 0; }
+  .storefront--fast-food .store-header__hours svg { width: 16px; height: 16px; }
+  .storefront--fast-food .store-header__hours svg:last-child { display: none; }
+  .storefront--fast-food .store-header__cart { min-height: 40px; padding-inline: 9px; gap: 5px; font-size: 12px; }
+  .storefront--fast-food .store-hero { padding: 36px 20px 24px; }
+  .storefront--fast-food .store-hero h1 { margin: 17px 0 13px; font-size: clamp(47px, 12.8vw, 68px); }
+  .storefront--fast-food .store-hero__copy > p { font-size: 14px; }
+  .storefront--fast-food .store-hero__meta { margin-top: 17px; gap: 10px 14px; font-size: 10px; }
+  .storefront--fast-food .store-hero__cta { min-height: 44px; margin-top: 19px; font-size: 14px; }
+  .storefront--fast-food .store-hero__art { min-height: 285px; width: min(100%, 360px); margin-top: 7px; }
+  .storefront--fast-food .store-hero__sun { width: 78%; }
+  .storefront--fast-food .store-hero__photo-frame { width: min(100%, 285px); padding: 8px; }
+  .storefront--fast-food .store-hero__photo-label { top: 13px; left: -10px; padding: 7px 9px; font-size: 8px; }
+  .storefront--fast-food .store-hero__bottomline { gap: 7px; margin-top: 8px; font-size: 9px; line-height: 1.4; }
+  .storefront--fast-food .store-promo {
+    width: calc(100% - 34px);
+    min-height: 0;
+    margin: 0 auto 60px;
+    padding: 20px;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .storefront--fast-food .store-promo__copy { width: 100%; max-width: none; }
+  .storefront--fast-food .store-promo h2 { max-width: 14ch; font-size: 34px; }
+  .storefront--fast-food .store-promo p { max-width: 38ch; font-size: 13px; }
+  .storefront--fast-food .store-promo__seal {
+    position: relative;
+    inset: auto;
+    justify-self: start;
+    margin-top: 15px;
+  }
+  .storefront--fast-food .store-promo__art {
+    position: relative;
+    inset: auto;
+    grid-row: 3;
+    width: 100%;
+    height: 205px;
+    margin-top: 18px;
+    border-width: 7px;
+    transform: none;
+  }
+  .storefront--fast-food .menu-section { width: calc(100% - 34px); padding-bottom: 62px; }
+  .storefront--fast-food .menu-section__heading { margin-bottom: 17px; align-items: stretch; flex-direction: column; gap: 13px; }
+  .storefront--fast-food .menu-section h2,
+  .storefront--fast-food .delivery-section h2 { font-size: 36px; }
+  .storefront--fast-food .store-search { width: 100%; height: 45px; }
+  .storefront--fast-food .category-rail { margin-right: -17px; gap: 8px; }
+  .storefront--fast-food .category-chip { min-width: max-content; min-height: 52px; padding-inline: 10px; font-size: 11px; white-space: nowrap; }
+  .storefront--fast-food .category-chip__icon { font-size: 19px; }
+  .storefront--fast-food .product-grid { gap: 13px 11px; }
+  .storefront--fast-food .product-card__art-wrap { aspect-ratio: 1 / 1; }
+  .storefront--fast-food .product-card__badge { top: 7px; left: 7px; padding: 5px 7px; font-size: 8px; }
+  .storefront--fast-food .product-card__quick-add { right: 7px; bottom: 7px; width: 34px; height: 34px; }
+  .storefront--fast-food .product-card__body { padding: 12px 10px 13px; }
+  .storefront--fast-food .product-card__category { font-size: 9px; }
+  .storefront--fast-food .product-card h3 { margin: 7px 0 5px; font-size: 18px; line-height: 1.08; }
+  .storefront--fast-food .product-card p { min-height: 48px; margin-bottom: 10px; font-size: 11px; line-height: 1.5; }
+  .storefront--fast-food .product-card__body > strong { font-size: 20px; }
+  .storefront--fast-food .delivery-section {
+    width: calc(100% - 34px);
+    margin-bottom: 52px;
+    padding: 20px;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .storefront--fast-food .delivery-section__copy > p { margin-block: 10px 15px; font-size: 12px; }
+  .storefront--fast-food .delivery-map { min-height: 235px; }
+  .storefront--fast-food .delivery-map__zone { width: 155px; height: 155px; }
+  .storefront--fast-food .store-footer { min-height: 120px; padding: 18px; flex-wrap: wrap; gap: 9px 14px; font-size: 10px; }
+  .storefront--fast-food .store-footer > span { order: 3; width: 100%; }
+  .storefront--fast-food .cart-dock { right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); left: 12px; min-height: 53px; padding-inline: 13px; }
+  .storefront--fast-food .modal-backdrop { padding: 0; align-items: end; }
+  .storefront--fast-food .product-dialog,
+  .storefront--fast-food .address-dialog { width: 100%; max-height: 92dvh; overflow: auto; border-width: 3px 0 0; box-shadow: 0 -5px 0 var(--ff-ink); }
+  .storefront--fast-food .product-dialog { display: block; }
+  .storefront--fast-food .product-dialog__art { height: 190px; min-height: 0; }
+  .storefront--fast-food .product-dialog__art img { height: 190px; min-height: 0; }
+  .storefront--fast-food .product-dialog__content { padding: 23px 20px calc(22px + env(safe-area-inset-bottom)); }
+  .storefront--fast-food .product-dialog__content h2 { font-size: 30px; }
+  .storefront--fast-food .product-dialog__actions > .button { font-size: 11px; }
+  .storefront--fast-food .address-dialog { padding: 22px 19px calc(22px + env(safe-area-inset-bottom)); }
+  .storefront--fast-food .modal-backdrop--drawer { align-items: stretch; }
+  .storefront--fast-food .cart-drawer { width: 100%; height: 100dvh; padding: 20px 19px calc(18px + env(safe-area-inset-bottom)); border-width: 0; }
+}
+
+@media (max-width: 430px) {
+  .storefront--fast-food .store-header { padding-inline: 10px; }
+  .storefront--fast-food .store-header__brand { gap: 7px; }
+  .storefront--fast-food .store-header__logo { width: 52px; height: 52px; }
+  .storefront--fast-food .store-header__brand strong { font-size: 16px; }
+  .storefront--fast-food .store-header__cart { min-height: 38px; padding-inline: 7px; font-size: 11px; }
+  .storefront--fast-food .store-hero { padding-inline: 17px; }
+  .storefront--fast-food .store-hero h1 { font-size: clamp(44px, 12.3vw, 54px); }
+  .storefront--fast-food .product-grid { grid-template-columns: 1fr; }
+  .storefront--fast-food .product-card__art-wrap { aspect-ratio: 4 / 3; }
+  .storefront--fast-food .product-card__body { padding: 14px; }
+  .storefront--fast-food .product-card h3 { font-size: 21px; }
+  .storefront--fast-food .product-card p { min-height: 0; font-size: 12px; }
+  .storefront--fast-food .delivery-section { padding: 16px; }
+}

@@ -15,8 +15,11 @@ import {
   ShoppingBag,
   X,
 } from "lucide-react";
-import { categories, demoStore, products, type StoreProduct } from "../../data/demoStore";
+import { getDemoStore, type StoreProduct } from "../../data/demo-stores";
 import "../../styles/storefront.css";
+import "../../styles/storefront/themes/original.css";
+import "../../styles/storefront/themes/fast-food.css";
+import "../../styles/storefront/themes/natural.css";
 import "../../styles/storefront-motion.css";
 import "../../styles/storefront-responsive.css";
 
@@ -38,6 +41,11 @@ type PreviewAddress = {
 type ModalState = "cart" | "address" | null;
 
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const themeNavigationOptions = [
+  { theme: "original", slug: "gelatto-totosu", name: "Original Peditto", palette: "Roxo e amarelo" },
+  { theme: "fast-food", slug: "restaurante-dona-erza", name: "Fast food", palette: "Vermelho e amarelo" },
+  { theme: "natural", slug: "muru-muru-coffee", name: "Café e natural", palette: "Verde e creme" },
+] as const;
 
 function useDialogFocus(ref: RefObject<HTMLElement | null>, onClose: () => void) {
   const closeRef = useRef(onClose);
@@ -116,7 +124,13 @@ function useMotionVisibility() {
   }, []);
 }
 
-function StorefrontPage() {
+type StorefrontPageProps = {
+  storeSlug: string;
+};
+
+function StorefrontPage({ storeSlug }: StorefrontPageProps) {
+  const demo = getDemoStore(storeSlug)!;
+  const { store, categories, products } = demo;
   const [activeCategory, setActiveCategory] = useState("all");
   const [query, setQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
@@ -125,6 +139,30 @@ function StorefrontPage() {
   const [address, setAddress] = useState<PreviewAddress>({ cep: "", street: "", number: "", neighborhood: "", complement: "" });
   const [locationMessage, setLocationMessage] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+  const themeMenuButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isThemeMenuOpen) return;
+
+    function closeOnOutsideClick(event: PointerEvent) {
+      if (!themeMenuRef.current?.contains(event.target as Node)) setIsThemeMenuOpen(false);
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setIsThemeMenuOpen(false);
+      themeMenuButtonRef.current?.focus();
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isThemeMenuOpen]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -134,8 +172,8 @@ function StorefrontPage() {
     const previousRobots = robots?.content;
     const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     const previousCanonical = canonical?.href;
-    document.title = `${demoStore.name} | Cardápio no Peditto`;
-    if (description) description.content = `Cardápio de demonstração do ${demoStore.name} no Peditto.`;
+    document.title = `${store.name} | Cardápio no Peditto`;
+    if (description) description.content = `Cardápio de demonstração do ${store.name} no Peditto.`;
     if (robots) robots.content = "noindex, nofollow";
     canonical?.removeAttribute("href");
     return () => {
@@ -144,7 +182,7 @@ function StorefrontPage() {
       if (robots && previousRobots) robots.content = previousRobots;
       if (canonical && previousCanonical) canonical.href = previousCanonical;
     };
-  }, []);
+  }, [store]);
 
   const visibleProducts = useMemo(() => {
     const term = query.trim().toLocaleLowerCase("pt-BR");
@@ -153,9 +191,9 @@ function StorefrontPage() {
       const matchesTerm = !term || `${product.name} ${product.description}`.toLocaleLowerCase("pt-BR").includes(term);
       return matchesCategory && matchesTerm;
     });
-  }, [activeCategory, query]);
-  const highlightedProduct = products.find((product) => product.id === demoStore.highlight.productId);
-  const bestSellerProduct = products.find((product) => product.id === demoStore.bestSellerProductId);
+  }, [activeCategory, products, query]);
+  const highlightedProduct = products.find((product) => product.id === store.highlight.productId);
+  const bestSellerProduct = products.find((product) => product.id === store.bestSellerProductId);
 
   useRevealCards(visibleProducts);
   useMotionVisibility();
@@ -227,20 +265,63 @@ function StorefrontPage() {
   }
 
   return (
-    <main className="storefront">
+    <main className={`storefront storefront--${store.theme}`}>
       <div className="storefront__topline">
-        <span><span className="storefront__status-dot" /> Cozinha aberta para pedidos</span>
-        <span className="storefront__demo-label">Vitrine de demonstração</span>
+        <span className="storefront__status"><span className="storefront__status-dot" /> {store.statusLabel}</span>
+        <span className="storefront__demo-label">Vitrine Demo</span>
+        <div className="storefront__theme-nav" ref={themeMenuRef}>
+          <button
+            ref={themeMenuButtonRef}
+            className="storefront__back-link"
+            type="button"
+            aria-label="Ver opções de visual"
+            aria-haspopup="true"
+            aria-expanded={isThemeMenuOpen}
+            aria-controls="store-theme-menu"
+            onClick={() => setIsThemeMenuOpen((open) => !open)}
+          >
+            <span className="storefront__theme-label">Ver opções de visual</span>
+            <span className="storefront__theme-label-compact" aria-hidden="true">Temas</span>
+            <ChevronDown size={14} aria-hidden="true" />
+          </button>
+          {isThemeMenuOpen && (
+            <nav className="storefront__theme-menu" id="store-theme-menu" aria-label="Navegar entre vitrines">
+              <a className="store-theme-menu__presentation" href="/#temas" onClick={() => setIsThemeMenuOpen(false)}>
+                ← Voltar à apresentação
+              </a>
+              <span className="store-theme-menu__heading">Conheça outras vitrines</span>
+              <div className="store-theme-menu__options">
+                {themeNavigationOptions.map((option) => {
+                  const isCurrent = store.theme === option.theme;
+                  const content = (
+                    <>
+                      <span className="store-theme-menu__swatch" aria-hidden="true" />
+                      <span className="store-theme-menu__copy">
+                        <strong>{option.name}</strong>
+                        <small>{option.palette}{isCurrent ? " · atual" : ""}</small>
+                      </span>
+                      {isCurrent && <Check size={16} aria-hidden="true" />}
+                    </>
+                  );
+
+                  return isCurrent
+                    ? <span className="store-theme-menu__option is-current" data-theme={option.theme} aria-current="page" key={option.theme}>{content}</span>
+                    : <a className="store-theme-menu__option" data-theme={option.theme} href={`/loja/${option.slug}`} key={option.theme}>{content}</a>;
+                })}
+              </div>
+            </nav>
+          )}
+        </div>
       </div>
 
       <header className="store-header">
-        <a className="store-header__brand" href="#inicio" aria-label={`${demoStore.name}, início`}>
-          {demoStore.logoUrl
-            ? <img className="store-header__logo" src={demoStore.logoUrl} alt={`Logo da ${demoStore.name}`} width="48" height="48" decoding="async" />
+        <a className="store-header__brand" href="#inicio" aria-label={`${store.name}, início`}>
+          {store.logoUrl
+            ? <img className={`store-header__logo${store.logoPresentation ? ` store-header__logo--${store.logoPresentation}` : ""}`} src={store.logoUrl} alt={`Logo da ${store.name}`} width="48" height="48" decoding="async" />
             : <span className="store-header__mark"><ChefHat size={23} strokeWidth={1.8} /></span>}
-          <span><strong>{demoStore.name}</strong><small>{demoStore.descriptor}</small></span>
+          <span><strong>{store.name}</strong><small>{store.descriptor}</small></span>
         </a>
-        <div className="store-header__hours"><Clock3 size={15} /><span>Hoje, até 22h</span><ChevronDown size={14} /></div>
+        <div className="store-header__hours"><Clock3 size={15} /><span>{store.openUntil}</span><ChevronDown size={14} /></div>
         <button className="store-header__cart" type="button" onClick={() => setModal("cart")} aria-label={`Abrir sacola, ${lineCount} itens`}>
           <ShoppingBag size={18} /><span>Sacola</span>{lineCount > 0 && <b>{lineCount}</b>}
         </button>
@@ -248,12 +329,12 @@ function StorefrontPage() {
 
       <section className="store-hero" id="inicio" aria-labelledby="store-title">
         <div className="store-hero__copy">
-          <span className="eyebrow"><span /> {demoStore.introduction.eyebrow}</span>
-          <h1 id="store-title">{demoStore.introduction.titleLineOne}<br /><em>{demoStore.introduction.titleLineTwo}</em></h1>
-          <p>{demoStore.introduction.description}</p>
+          <span className="eyebrow"><span /> {store.introduction.eyebrow}</span>
+          <h1 id="store-title">{store.introduction.titleLineOne}<br /><em>{store.introduction.titleLineTwo}</em></h1>
+          <p>{store.introduction.description}</p>
           <div className="store-hero__meta">
-            <span><Clock3 size={16} /> 30–45 min</span>
-            <span><MapPin size={16} /> {demoStore.neighborhood}</span>
+            <span><Clock3 size={16} /> {store.deliveryTime}</span>
+            <span><MapPin size={16} /> {store.neighborhood}</span>
           </div>
           <button className="button button--primary store-hero__cta" type="button" onClick={() => document.querySelector("#cardapio")?.scrollIntoView({ behavior: "smooth" })}>
             Ver o cardápio <ArrowDownRight size={17} />
@@ -261,21 +342,21 @@ function StorefrontPage() {
         </div>
         <div className="store-hero__art storefront__motion-target" aria-hidden="true">
           <div className="store-hero__sun" />
-          {bestSellerProduct && <figure className="store-hero__photo-frame"><img className="store-hero__food" src={bestSellerProduct.image} alt={bestSellerProduct.imageAlt} width="800" height="800" fetchPriority="high" decoding="async" /><figcaption className="store-hero__photo-label">Mais pedido</figcaption></figure>}
+          {bestSellerProduct && <figure className="store-hero__photo-frame"><img className={`store-hero__food${bestSellerProduct.imagePresentation ? ` store-hero__food--${bestSellerProduct.imagePresentation}` : ""}`} src={bestSellerProduct.image} alt={bestSellerProduct.imageAlt} width="800" height="800" fetchPriority="high" decoding="async" /><figcaption className="store-hero__photo-label">{store.bestSellerLabel}</figcaption></figure>}
           
         </div>
-        <div className="store-hero__bottomline"><span>{demoStore.descriptor}</span><span>desde {demoStore.foundedYear}</span><span>{demoStore.neighborhood}</span></div>
+        <div className="store-hero__bottomline"><span>{store.descriptor}</span>{store.foundedYear && <span>desde {store.foundedYear}</span>}<span>{store.neighborhood}</span></div>
       </section>
 
       <section className="store-promo" aria-label="Destaque da casa" data-reveal>
-        <div className="store-promo__copy"><span>{demoStore.highlight.eyebrow}</span><h2>{demoStore.highlight.title}</h2><p>{demoStore.highlight.description}</p><button type="button" onClick={() => highlightedProduct && setSelectedProduct(highlightedProduct)}>{demoStore.highlight.actionLabel} <ArrowRight size={15} /></button></div>
+        <div className="store-promo__copy"><span>{store.highlight.eyebrow}</span><h2>{store.highlight.title}</h2><p>{store.highlight.description}</p><button type="button" onClick={() => highlightedProduct && setSelectedProduct(highlightedProduct)}>{store.highlight.actionLabel} <ArrowRight size={15} /></button></div>
         {highlightedProduct && <img className="store-promo__art" src={highlightedProduct.image} alt={highlightedProduct.imageAlt} width="672" height="1200" loading="lazy" decoding="async" />}
         <span className="store-promo__seal">feito<br />com<br />calma</span>
       </section>
 
       <section className="menu-section" id="cardapio" aria-labelledby="menu-title">
         <div className="menu-section__heading" data-reveal>
-          <div><span className="eyebrow"><span /> {demoStore.name.toLocaleUpperCase("pt-BR")}</span><h2 id="menu-title">Escolha com calma.</h2></div>
+          <div><span className="eyebrow"><span /> {store.name.toLocaleUpperCase("pt-BR")}</span><h2 id="menu-title">{store.menuTitle}</h2></div>
           <label className="store-search"><Search size={18} /><span className="sr-only">Buscar no cardápio</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="O que deu vontade?" /></label>
         </div>
 
@@ -291,7 +372,7 @@ function StorefrontPage() {
           {visibleProducts.map((product, index) => (
             <article className="product-card" key={product.id} data-reveal style={{ "--card-order": index } as CSSProperties}>
               <button className="product-card__open" type="button" onClick={() => setSelectedProduct(product)} aria-label={`Ver detalhes de ${product.name}`}>
-                <div className="product-card__art-wrap">
+                <div className={`product-card__art-wrap${product.imagePresentation ? ` product-card__art-wrap--${product.imagePresentation}` : ""}`}>
                   {product.badge && <span className="product-card__badge">{product.badge}</span>}
                   <img className="product-card__photo" src={product.image} alt={product.imageAlt} width="800" height="1200" loading="lazy" decoding="async" />
                   <span className="product-card__quick-add" aria-hidden="true"><Plus size={18} /></span>
@@ -307,8 +388,8 @@ function StorefrontPage() {
       <section className="delivery-section" aria-labelledby="delivery-title" data-reveal>
         <div className="delivery-section__copy">
           <span className="eyebrow"><span /> ENTREGA DA CASA</span>
-          <h2 id="delivery-title">Até onde a Dona Erza entrega?</h2>
-          <p>Veja a área aproximada no mapa. A confirmação do endereço e da entrega acontece no servidor antes do pedido.</p>
+          <h2 id="delivery-title">{store.deliveryTitle}</h2>
+          <p>{store.deliveryDescription}</p>
           <div className="delivery-section__address">
             <MapPin size={18} /><span>{addressLabel || "Informe seu endereço para consultar"}</span>
             <button type="button" onClick={() => setModal("address")}>{addressLabel ? "Editar" : "Informar"}</button>
@@ -327,11 +408,11 @@ function StorefrontPage() {
         </div>
       </section>
 
-      <footer className="store-footer"><a href="#inicio" className="store-footer__brand"><span className="store-header__mark"><ChefHat size={19} /></span>{demoStore.name}</a><span>Comida feita por gente, pedida pelo Peditto.</span><a href="#cardapio">Voltar ao cardápio ↑</a></footer>
+      <footer className="store-footer"><a href="#inicio" className="store-footer__brand"><span className="store-header__mark"><ChefHat size={19} /></span>{store.name}</a><span>{store.footerMessage}</span><a href="#cardapio">Voltar ao cardápio ↑</a></footer>
 
       {lineCount > 0 && <button className="cart-dock" type="button" onClick={() => setModal("cart")}><span><ShoppingBag size={18} /><b>{lineCount}</b></span><span>Ver sacola</span><strong>{money.format(cartTotal)}</strong></button>}
 
-      {selectedProduct && <ProductDialog product={selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={addToCart} />}
+      {selectedProduct && <ProductDialog product={selectedProduct} storeName={store.name} onClose={() => setSelectedProduct(null)} onAdd={addToCart} />}
       {modal === "cart" && <CartDrawer lines={cart} total={cartTotal} onClose={() => setModal(null)} onChange={changeLineQuantity} onAddress={() => setModal("address")} addressLabel={addressLabel} />}
       {modal === "address" && <AddressDialog onClose={() => setModal(null)} onSave={saveAddress} initialAddress={address} />}
     </main>
@@ -340,11 +421,12 @@ function StorefrontPage() {
 
 type ProductDialogProps = {
   product: StoreProduct;
+  storeName: string;
   onClose: () => void;
   onAdd: (product: StoreProduct, quantity: number, addonIds: string[]) => void;
 };
 
-function ProductDialog({ product, onClose, onAdd }: ProductDialogProps) {
+function ProductDialog({ product, storeName, onClose, onAdd }: ProductDialogProps) {
   const dialogRef = useRef<HTMLElement | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addonIds, setAddonIds] = useState<string[]>([]);
@@ -354,8 +436,8 @@ function ProductDialog({ product, onClose, onAdd }: ProductDialogProps) {
   return <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <section ref={dialogRef} className="product-dialog" role="dialog" aria-modal="true" aria-labelledby="product-dialog-title" tabIndex={-1}>
       <button className="icon-button product-dialog__close" type="button" onClick={onClose} aria-label="Fechar"><X size={20} /></button>
-      <div className="product-dialog__art"><img src={product.image} alt={product.imageAlt} width="800" height="1200" decoding="async" /></div>
-      <div className="product-dialog__content"><span className="eyebrow"><span /> FEITO NA COZINHA DA DONA ERZA</span><h2 id="product-dialog-title">{product.name}</h2><p>{product.description}</p>
+      <div className={`product-dialog__art${product.imagePresentation ? ` product-dialog__art--${product.imagePresentation}` : ""}`}><img src={product.image} alt={product.imageAlt} width="800" height="1200" decoding="async" /></div>
+      <div className="product-dialog__content"><span className="eyebrow"><span /> FEITO NA {storeName.toLocaleUpperCase("pt-BR")}</span><h2 id="product-dialog-title">{product.name}</h2><p>{product.description}</p>
         {product.addons.length > 0 && <fieldset className="addon-list"><legend>Quer completar?</legend>{product.addons.map((addon) => <label key={addon.id}><input type="checkbox" checked={addonIds.includes(addon.id)} onChange={(event) => setAddonIds((current) => event.target.checked ? [...current, addon.id] : current.filter((id) => id !== addon.id))} /><span>{addon.name}</span><b>+ {money.format(addon.price)}</b></label>)}</fieldset>}
         <div className="product-dialog__actions"><div className="quantity-stepper" aria-label="Quantidade"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Diminuir"><Minus size={15} /></button><span>{quantity}</span><button type="button" onClick={() => setQuantity((value) => value + 1)} aria-label="Aumentar"><Plus size={15} /></button></div><button className="button button--primary" type="button" onClick={() => onAdd(product, quantity, addonIds)}>Adicionar · {money.format((product.price + extras) * quantity)}</button></div>
       </div>

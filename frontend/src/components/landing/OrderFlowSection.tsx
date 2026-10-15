@@ -3,7 +3,7 @@ const steps = [
     number: "01",
     badge: "CARDÁPIO",
     title: "Compartilhe seu link",
-    text: "O cliente acessa pelo navegador do celular, sem precisar baixar aplicativo pesado. Cardápio limpo, rápido e com a sua identidade.",
+    text: "O cliente abre o cardápio pelo navegador do celular. Você poderá escolher um visual que combine com a identidade da sua loja, sem exigir que ele baixe um aplicativo.",
     mascot: "/link.png",
     alt: "Mascote apresentando o link do cardápio digital",
   },
